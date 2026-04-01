@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+
+  <!-- ============================================================
+       HOME BASKET — App Icon (512×512, rounded square)
+       ============================================================ -->
+
+  <!-- Background: deep forest green rounded square -->
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="#1A4731"/>
+
+  <!-- Icon centered in canvas, translated to (256, 268) -->
+  <g id="icon" transform="translate(256, 268)">
+
+    <!-- ROOF TRIANGLE: peak at (0, -148), feet at (-148, -8) and (148, -8) -->
+    <polygon points="0,-148 -148,-8 148,-8" fill="#C9963A"/>
+
+    <!-- ROOF PEAK ACCENT -->
+    <circle cx="0" cy="-148" r="13" fill="#E8B84B"/>
+
+    <!-- BASKET BODY: top from (-124,-8) to (124,-8), bottom curve -->
+    <path d="
+      M -124 -8
+      L  124 -8
+      L  90  128
+      Q  0  146 -90 128
+      Z
+    " fill="white" opacity="0.96"/>
+
+    <!-- BASKET SLATS: green rounded rects on white basket -->
+    <rect x="-72" y="8"  width="17" height="90"  rx="8.5" fill="#1A4731"/>
+    <rect x="-28" y="8"  width="17" height="104" rx="8.5" fill="#1A4731"/>
+    <rect x="16"  y="8"  width="17" height="104" rx="8.5" fill="#1A4731"/>
+    <rect x="60"  y="8"  width="17" height="90"  rx="8.5" fill="#1A4731"/>
+
+    <!-- BASKET RIM: subtle gold line at top of basket -->
+    <line x1="-124" y1="-8" x2="124" y2="-8" stroke="#C9963A" stroke-width="4" opacity="0.5"/>
+
+  </g>
+
+</svg>

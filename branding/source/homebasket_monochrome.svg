@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 400" width="560" height="400">
+
+  <!-- ============================================================
+       HOME BASKET — Monochrome Version (all #1A4731 forest green)
+       ============================================================ -->
+
+  <g id="icon" transform="translate(280, 30)">
+
+    <!-- ROOF TRIANGLE (same green, slightly lighter via opacity or outline) -->
+    <polygon points="0,0 -105,72 105,72" fill="#1A4731" opacity="0.70"/>
+
+    <!-- ROOF PEAK ACCENT -->
+    <circle cx="0" cy="0" r="8" fill="#1A4731"/>
+
+    <!-- BASKET BODY -->
+    <path d="
+      M -88 72
+      L  88 72
+      L  64 168
+      Q  0 182 -64 168
+      Z
+    " fill="#1A4731"/>
+
+    <!-- BASKET SLATS: white cutouts -->
+    <rect x="-52" y="84" width="13" height="62" rx="6.5" fill="white"/>
+    <rect x="-21" y="84" width="13" height="72" rx="6.5" fill="white"/>
+    <rect x="10"  y="84" width="13" height="72" rx="6.5" fill="white"/>
+    <rect x="41"  y="84" width="13" height="62" rx="6.5" fill="white"/>
+
+  </g>
+
+  <!-- Wordmark: all forest green -->
+  <text
+    x="280"
+    y="258"
+    text-anchor="middle"
+    font-family="'Nunito', 'Poppins', 'Helvetica Neue', Arial, sans-serif"
+    font-size="54"
+    font-weight="800"
+    letter-spacing="-1"
+    fill="#1A4731">Home</text>
+
+  <line x1="196" y1="268" x2="364" y2="268" stroke="#1A4731" stroke-width="1.8" opacity="0.30"/>
+
+  <text
+    x="280"
+    y="322"
+    text-anchor="middle"
+    font-family="'Nunito', 'Poppins', 'Helvetica Neue', Arial, sans-serif"
+    font-size="36"
+    font-weight="600"
+    letter-spacing="8"
+    fill="#1A4731">BASKET</text>
+
+</svg>

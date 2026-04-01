@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 160" width="560" height="160">
+
+  <!-- ============================================================
+       HOME BASKET — Horizontal Lockup (Icon Left + Wordmark Right)
+       ============================================================ -->
+
+  <!-- ICON: scaled down, positioned left, centered vertically at y=80 -->
+  <g id="icon" transform="translate(80, 80) scale(0.52)">
+
+    <!-- ROOF TRIANGLE -->
+    <polygon points="0,-72 -105,0 105,0" fill="#C9963A"/>
+    <circle cx="0" cy="-72" r="8" fill="#E8B84B"/>
+
+    <!-- BASKET BODY -->
+    <path d="
+      M -88 0
+      L  88 0
+      L  64 96
+      Q  0 110 -64 96
+      Z
+    " fill="#1A4731"/>
+
+    <!-- SLATS -->
+    <rect x="-52" y="12" width="13" height="62" rx="6.5" fill="#F5F0E8" opacity="0.92"/>
+    <rect x="-21" y="12" width="13" height="72" rx="6.5" fill="#F5F0E8" opacity="0.92"/>
+    <rect x="10"  y="12" width="13" height="72" rx="6.5" fill="#F5F0E8" opacity="0.92"/>
+    <rect x="41"  y="12" width="13" height="62" rx="6.5" fill="#F5F0E8" opacity="0.92"/>
+
+    <!-- RIM -->
+    <line x1="-88" y1="0" x2="88" y2="0" stroke="#C9963A" stroke-width="3" opacity="0.6"/>
+
+  </g>
+
+  <!-- Thin vertical separator -->
+  <line x1="148" y1="30" x2="148" y2="130" stroke="#2C2C2C" stroke-width="1" opacity="0.15"/>
+
+  <!-- WORDMARK: right side, vertically centered -->
+  <!-- "Home" top line -->
+  <text
+    x="175"
+    y="82"
+    text-anchor="start"
+    font-family="'Nunito', 'Poppins', 'Helvetica Neue', Arial, sans-serif"
+    font-size="42"
+    font-weight="800"
+    letter-spacing="-0.5"
+    fill="#1A4731">Home</text>
+
+  <!-- "BASKET" bottom line -->
+  <text
+    x="177"
+    y="118"
+    text-anchor="start"
+    font-family="'Nunito', 'Poppins', 'Helvetica Neue', Arial, sans-serif"
+    font-size="26"
+    font-weight="600"
+    letter-spacing="6"
+    fill="#C9963A">BASKET</text>
+
+</svg>

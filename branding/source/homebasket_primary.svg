@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 400" width="560" height="400">
+
+  <!-- ============================================================
+       HOME BASKET — Primary Logo (Icon + Wordmark, Stacked)
+       Colors: Forest Green #1A4731 | Warm Gold #C9963A | Off-white #F5F0E8
+       ============================================================ -->
+
+  <!-- ===== ICON: centered at (280, 30), total height ~175 ===== -->
+  <g id="icon" transform="translate(280, 30)">
+
+    <!-- ROOF TRIANGLE (warm gold) -->
+    <!-- Peak: (0, 0) | Left foot: (-105, 72) | Right foot: (105, 72) -->
+    <polygon points="0,0 -105,72 105,72" fill="#C9963A"/>
+
+    <!-- ROOF PEAK ACCENT: small bright circle -->
+    <circle cx="0" cy="0" r="8" fill="#E8B84B"/>
+
+    <!-- BASKET BODY (forest green trapezoid) -->
+    <!-- Top: (-88, 72) to (88, 72) | Bottom curve -->
+    <path d="
+      M -88 72
+      L  88 72
+      L  64 168
+      Q  0 182 -64 168
+      Z
+    " fill="#1A4731"/>
+
+    <!-- BASKET SLATS: 4 off-white rounded slots -->
+    <rect x="-52" y="84" width="13" height="62" rx="6.5" fill="#F5F0E8" opacity="0.92"/>
+    <rect x="-21" y="84" width="13" height="72" rx="6.5" fill="#F5F0E8" opacity="0.92"/>
+    <rect x="10"  y="84" width="13" height="72" rx="6.5" fill="#F5F0E8" opacity="0.92"/>
+    <rect x="41"  y="84" width="13" height="62" rx="6.5" fill="#F5F0E8" opacity="0.92"/>
+
+    <!-- BASKET RIM: thin gold line at top of basket body -->
+    <line x1="-88" y1="72" x2="88" y2="72" stroke="#C9963A" stroke-width="3" opacity="0.6"/>
+
+  </g>
+
+  <!-- ===== WORDMARK ===== -->
+  <!-- Icon bottom: 30 + 182 = 212. Wordmark starts at ~235 -->
+
+  <!-- "Home" — forest green, bold rounded sans -->
+  <text
+    x="280"
+    y="258"
+    text-anchor="middle"
+    font-family="'Nunito', 'Poppins', 'Helvetica Neue', 'Arial Rounded MT Bold', Arial, sans-serif"
+    font-size="54"
+    font-weight="800"
+    letter-spacing="-1"
+    fill="#1A4731">Home</text>
+
+  <!-- Divider -->
+  <line x1="196" y1="268" x2="364" y2="268" stroke="#C9963A" stroke-width="1.8" opacity="0.45"/>
+
+  <!-- "BASKET" — warm gold, spaced caps -->
+  <text
+    x="280"
+    y="322"
+    text-anchor="middle"
+    font-family="'Nunito', 'Poppins', 'Helvetica Neue', 'Arial Rounded MT Bold', Arial, sans-serif"
+    font-size="36"
+    font-weight="600"
+    letter-spacing="8"
+    fill="#C9963A">BASKET</text>
+
+</svg>

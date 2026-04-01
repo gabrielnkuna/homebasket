@@ -1,56 +1,82 @@
-# Welcome to your Expo app 👋
+# Home Basket
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Home Basket is a cross-platform household grocery app built for Android first, while still supporting iOS and web from the same Expo + React Native codebase.
 
-## Get started
+## Product direction
 
-1. Install dependencies
+- Shared household shopping list
+- Fast add and toggle flow for groceries, toiletries, and cleaning items
+- Purchase logging with total-spend tracking
+- Bought items clear only when a purchase is recorded
+- Simple household roster so one device can act as different family members or shoppers
 
-   ```bash
-   npm install
-   ```
+## Why Firestore
 
-2. Start the app
+The app is structured around Cloud Firestore as the target database because it matches the product requirements well:
 
-   ```bash
-   npx expo start
-   ```
+- real-time shared list updates for multiple household members
+- offline-friendly sync for mobile and web clients
+- one backend model for Android, iOS, and web
+- simple subcollection structure for households, members, items, and trips
+- Firebase Auth can sit next to Firestore cleanly so each device keeps a stable household identity
 
-In the output, you'll find options to open the app in a
+The current implementation boots with an in-memory demo repository so the app works immediately. If Firebase environment variables are present, the repository layer can switch to Firestore.
+In Firestore mode, Home Basket also signs the device in anonymously and binds household membership to that authenticated user, which makes household restore more reliable than a local-only session.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Solution structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+src/
+  app/                       Expo Router entry screens
+  components/                Navigation shell
+  constants/                 Theme tokens
+  features/home-basket/
+    application/             Pure use cases and selectors
+    domain/                  Entities and repository contracts
+    infrastructure/          In-memory + Firestore adapters
+    presentation/            Zustand store and screen components
+  hooks/                     Color-scheme and theme helpers
+  shared/
+    format/                  Currency and date helpers
+    ui/                      Reusable layout and card components
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Commands
 
-### Other setup steps
+```bash
+npm install
+npm run web
+npm run android
+npm run test
+npm run typecheck
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## MVP launch docs
 
-## Learn more
+- [Firebase Hosting deploy guide](./docs/firebase-hosting-deploy.md)
+- [Android release guide](./docs/android-release-guide.md)
+- [App config review](./docs/app-config-review.md)
+- [Play Store assets checklist](./docs/play-store-assets-checklist.md)
+- [Play Store creative brief](./docs/play-store-creative-brief.md)
+- [Play Store screenshot runbook](./docs/play-store-screenshot-runbook.md)
+- [MVP launch pack](./docs/mvp-launch-pack.md)
+- [Privacy policy draft](./docs/privacy-policy.md)
+- [Store listing copy](./docs/store-listing-copy.md)
+- [Privacy policy starter](./docs/privacy-policy-starter.md)
+- [Terms and disclaimer starter](./docs/terms-and-disclaimer-starter.md)
+- [Release QA checklist](./docs/release-qa-checklist.md)
 
-To learn more about developing your project with Expo, look at the following resources:
+## Firebase setup
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Create a `.env` from `.env.example` when you are ready to use Firestore:
 
-## Join the community
+```bash
+EXPO_PUBLIC_FIREBASE_API_KEY=
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+EXPO_PUBLIC_FIREBASE_APP_ID=
+```
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Without those variables, Home Basket runs in demo mode with seeded household data.

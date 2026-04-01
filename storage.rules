@@ -1,0 +1,45 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function memberDocPath(householdId, memberId) {
+      return /databases/(default)/documents/households/$(householdId)/members/$(memberId);
+    }
+
+    function userMembershipPath(userId) {
+      return /databases/(default)/documents/userMemberships/$(userId);
+    }
+
+    function hasMappedMembership(householdId) {
+      return isSignedIn() &&
+        firestore.exists(userMembershipPath(request.auth.uid)) &&
+        firestore.get(userMembershipPath(request.auth.uid)).data.householdId == householdId &&
+        firestore.get(userMembershipPath(request.auth.uid)).data.memberId is string &&
+        firestore.exists(
+          memberDocPath(
+            householdId,
+            firestore.get(userMembershipPath(request.auth.uid)).data.memberId
+          )
+        );
+    }
+
+    function isHouseholdMember(householdId) {
+      return isSignedIn() &&
+        (
+          firestore.exists(memberDocPath(householdId, request.auth.uid)) ||
+          hasMappedMembership(householdId)
+        );
+    }
+
+    match /households/{householdId}/trips/{tripId}/{fileName} {
+      allow read: if isHouseholdMember(householdId);
+      allow write: if isHouseholdMember(householdId) &&
+        request.resource != null &&
+        request.resource.size < 10 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+  }
+}

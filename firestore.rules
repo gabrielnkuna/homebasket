@@ -1,0 +1,349 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSignedInAs(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function memberDocPath(householdId, memberId) {
+      return /databases/$(database)/documents/households/$(householdId)/members/$(memberId);
+    }
+
+    function userMembershipPath(userId) {
+      return /databases/$(database)/documents/userMemberships/$(userId);
+    }
+
+    function hasMappedMembership(householdId) {
+      return isSignedIn() &&
+        exists(userMembershipPath(request.auth.uid)) &&
+        get(userMembershipPath(request.auth.uid)).data.householdId == householdId &&
+        get(userMembershipPath(request.auth.uid)).data.memberId is string &&
+        exists(memberDocPath(householdId, get(userMembershipPath(request.auth.uid)).data.memberId));
+    }
+
+    function isHouseholdMember(householdId) {
+      return isSignedIn() &&
+        (
+          exists(memberDocPath(householdId, request.auth.uid)) ||
+          hasMappedMembership(householdId)
+        );
+    }
+
+    function isHouseholdMemberNowOrAfter(householdId) {
+      return isSignedIn() &&
+        (
+          exists(memberDocPath(householdId, request.auth.uid)) ||
+          existsAfter(memberDocPath(householdId, request.auth.uid)) ||
+          hasMappedMembership(householdId)
+        );
+    }
+
+    function memberExistsNowOrAfter(householdId, memberId) {
+      return exists(memberDocPath(householdId, memberId)) ||
+        existsAfter(memberDocPath(householdId, memberId));
+    }
+
+    function invitePath(inviteCode) {
+      return /databases/$(database)/documents/householdInvites/$(inviteCode);
+    }
+
+    function householdPath(householdId) {
+      return /databases/$(database)/documents/households/$(householdId);
+    }
+
+    function validHouseholdCreate() {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'currencyCode',
+          'primaryStore',
+          'shopperOfWeekMemberId',
+          'monthlyBudgetCents',
+          'budgetCycleAnchorDay'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.currencyCode is string &&
+        request.resource.data.primaryStore is string &&
+        request.resource.data.budgetCycleAnchorDay is number &&
+        request.resource.data.budgetCycleAnchorDay >= 1 &&
+        request.resource.data.budgetCycleAnchorDay <= 31 &&
+        request.resource.data.monthlyBudgetCents is number &&
+        request.resource.data.shopperOfWeekMemberId == request.auth.uid;
+    }
+
+    function isHouseholdOwner(householdId) {
+      return isSignedIn() &&
+        (
+          (
+            exists(memberDocPath(householdId, request.auth.uid)) &&
+            get(memberDocPath(householdId, request.auth.uid)).data.role == 'Owner'
+          ) ||
+          (
+            exists(userMembershipPath(request.auth.uid)) &&
+            get(userMembershipPath(request.auth.uid)).data.householdId == householdId &&
+            get(userMembershipPath(request.auth.uid)).data.memberId is string &&
+            exists(memberDocPath(householdId, get(userMembershipPath(request.auth.uid)).data.memberId)) &&
+            get(memberDocPath(householdId, get(userMembershipPath(request.auth.uid)).data.memberId)).data.role == 'Owner'
+          )
+        );
+    }
+
+    function validHouseholdBudgetSettingsUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'budgetCycleAnchorDay',
+          'monthlyBudgetCents'
+        ]) &&
+        request.resource.data.budgetCycleAnchorDay is number &&
+        request.resource.data.budgetCycleAnchorDay >= 1 &&
+        request.resource.data.budgetCycleAnchorDay <= 31 &&
+        request.resource.data.monthlyBudgetCents is number &&
+        request.resource.data.monthlyBudgetCents >= 0;
+    }
+
+    function validMemberShape(memberId) {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'initials',
+          'role',
+          'authUserId',
+          'joinedWithInviteCode'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.initials is string &&
+        request.resource.data.role is string &&
+        request.resource.data.authUserId == request.auth.uid &&
+        memberId == request.auth.uid;
+    }
+
+    function validOwnerBootstrap(householdId, memberId) {
+      return request.resource.data.role == 'Owner' &&
+        existsAfter(householdPath(householdId)) &&
+        getAfter(householdPath(householdId)).data.shopperOfWeekMemberId == memberId;
+    }
+
+    function validInviteJoin(householdId) {
+      return request.resource.data.role == 'Household member' &&
+        request.resource.data.keys().hasAll(['joinedWithInviteCode']) &&
+        request.resource.data.joinedWithInviteCode is string &&
+        exists(invitePath(request.resource.data.joinedWithInviteCode)) &&
+        get(invitePath(request.resource.data.joinedWithInviteCode)).data.householdId == householdId &&
+        exists(householdPath(householdId));
+    }
+
+    function validUserMembership(userId) {
+      return request.resource.data.keys().hasOnly([
+          'authUserId',
+          'householdId',
+          'householdName',
+          'memberId',
+          'memberName',
+          'memberRole',
+          'updatedAt'
+        ]) &&
+        request.resource.data.authUserId == request.auth.uid &&
+        request.resource.data.memberId == request.auth.uid &&
+        request.resource.data.householdId is string &&
+        request.resource.data.householdName is string &&
+        request.resource.data.memberName is string &&
+        request.resource.data.memberRole is string &&
+        request.resource.data.updatedAt is string;
+    }
+
+    function validItemCreate(householdId) {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'category',
+          'quantity',
+          'status',
+          'addedByMemberId',
+          'addedAt',
+          'note'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.category is string &&
+        request.resource.data.quantity is string &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.addedByMemberId is string &&
+        request.resource.data.addedAt is string &&
+        memberExistsNowOrAfter(householdId, request.resource.data.addedByMemberId);
+    }
+
+    function validItemStatusUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+        (request.resource.data.status == 'pending' || request.resource.data.status == 'bought');
+    }
+
+    function validItemDetailsUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name',
+          'category',
+          'quantity'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.category is string &&
+        request.resource.data.quantity is string;
+    }
+
+    function validTripCreate(householdId) {
+      return request.resource.data.keys().hasOnly([
+          'store',
+          'shopperMemberId',
+          'totalSpendCents',
+          'completedAt',
+          'note',
+          'purchasedItems',
+          'receipt'
+        ]) &&
+        request.resource.data.store is string &&
+        request.resource.data.shopperMemberId is string &&
+        request.resource.data.totalSpendCents is number &&
+        request.resource.data.completedAt is string &&
+        request.resource.data.purchasedItems is list &&
+        (
+          !request.resource.data.keys().hasAny(['receipt']) ||
+          (
+            request.resource.data.receipt is map &&
+            request.resource.data.receipt.keys().hasOnly([
+              'downloadUrl',
+              'storagePath',
+              'fileName',
+              'contentType',
+              'uploadedAt'
+            ]) &&
+            request.resource.data.receipt.downloadUrl is string &&
+            request.resource.data.receipt.storagePath is string &&
+            request.resource.data.receipt.fileName is string &&
+            request.resource.data.receipt.contentType is string &&
+            request.resource.data.receipt.uploadedAt is string
+          )
+        ) &&
+        memberExistsNowOrAfter(householdId, request.resource.data.shopperMemberId);
+    }
+
+    function validReminderShape(householdId) {
+      return request.resource.data.keys().hasOnly([
+          'title',
+          'quantity',
+          'category',
+          'cadence',
+          'nextDueAt',
+          'createdByMemberId',
+          'createdAt',
+          'note',
+          'lastAddedAt'
+        ]) &&
+        request.resource.data.title is string &&
+        request.resource.data.quantity is string &&
+        request.resource.data.category is string &&
+        request.resource.data.cadence is string &&
+        (
+          request.resource.data.cadence == 'weekly' ||
+          request.resource.data.cadence == 'fortnightly' ||
+          request.resource.data.cadence == 'monthly'
+        ) &&
+        request.resource.data.nextDueAt is string &&
+        request.resource.data.createdByMemberId is string &&
+        request.resource.data.createdAt is string &&
+        (
+          !request.resource.data.keys().hasAny(['note']) ||
+          request.resource.data.note is string
+        ) &&
+        (
+          !request.resource.data.keys().hasAny(['lastAddedAt']) ||
+          request.resource.data.lastAddedAt is string
+        ) &&
+        memberExistsNowOrAfter(householdId, request.resource.data.createdByMemberId);
+    }
+
+    function validReminderCreate(householdId) {
+      return validReminderShape(householdId) &&
+        !request.resource.data.keys().hasAny(['lastAddedAt']);
+    }
+
+    function validReminderUpdate(householdId) {
+      return validReminderShape(householdId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'nextDueAt',
+          'lastAddedAt'
+        ]);
+    }
+
+    function validInviteCreate(householdId, inviteCode) {
+      return request.resource.data.keys().hasOnly([
+          'code',
+          'householdId',
+          'householdName',
+          'createdByMemberId',
+          'createdAt'
+        ]) &&
+        request.resource.data.code == inviteCode &&
+        request.resource.data.householdId == householdId &&
+        request.resource.data.householdName is string &&
+        request.resource.data.createdByMemberId is string &&
+        request.resource.data.createdAt is string &&
+        memberExistsNowOrAfter(householdId, request.resource.data.createdByMemberId);
+    }
+
+    match /households/{householdId} {
+      allow read: if isHouseholdMember(householdId);
+      allow create: if isSignedIn() && validHouseholdCreate();
+      allow update: if isHouseholdOwner(householdId) && validHouseholdBudgetSettingsUpdate();
+      allow delete: if false;
+
+      match /members/{memberId} {
+        allow get: if isSignedInAs(memberId) || isHouseholdMember(householdId);
+        allow list: if isHouseholdMember(householdId);
+        allow create: if isSignedInAs(memberId) &&
+          validMemberShape(memberId) &&
+          (validOwnerBootstrap(householdId, memberId) || validInviteJoin(householdId));
+        allow update, delete: if false;
+      }
+
+      match /items/{itemId} {
+        allow read: if isHouseholdMember(householdId);
+        allow create: if isHouseholdMember(householdId) && validItemCreate(householdId);
+        allow update: if isHouseholdMember(householdId) &&
+          (validItemStatusUpdate() || validItemDetailsUpdate());
+        allow delete: if isHouseholdMember(householdId);
+      }
+
+      match /trips/{tripId} {
+        allow read: if isHouseholdMember(householdId);
+        allow create: if isHouseholdMember(householdId) && validTripCreate(householdId);
+        allow update, delete: if false;
+      }
+
+      match /reminders/{reminderId} {
+        allow read: if isHouseholdMember(householdId);
+        allow create: if isHouseholdMember(householdId) && validReminderCreate(householdId);
+        allow update: if isHouseholdMember(householdId) && validReminderUpdate(householdId);
+        allow delete: if isHouseholdMember(householdId);
+      }
+
+      match /invites/{inviteCode} {
+        allow read: if isHouseholdMember(householdId);
+        allow create: if isHouseholdMemberNowOrAfter(householdId) &&
+          validInviteCreate(householdId, inviteCode);
+        allow update, delete: if false;
+      }
+    }
+
+    match /householdInvites/{inviteCode} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isSignedIn() &&
+        request.resource.data.householdId is string &&
+        validInviteCreate(request.resource.data.householdId, inviteCode);
+      allow update, delete: if false;
+    }
+
+    match /userMemberships/{userId} {
+      allow read: if isSignedInAs(userId);
+      allow create, update: if isSignedInAs(userId) && validUserMembership(userId);
+      allow delete: if false;
+    }
+  }
+}

@@ -1,37 +1,44 @@
 {
   "expo": {
-    "name": "home-basket",
+    "name": "Home Basket",
     "slug": "home-basket",
     "version": "1.0.0",
+    "description": "A shared household shopping and purchase tracker for Android, iOS, and web.",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/brand/homebasket_appicon.png",
     "scheme": "homebasket",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/brand/homebasket_appicon.png",
+      "bundleIdentifier": "com.transcripe.homebasket"
     },
     "android": {
+      "package": "com.transcripe.homebasket",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#1A4731",
+        "foregroundImage": "./assets/brand/homebasket_appicon.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/brand/homebasket_appicon.png"
     },
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Home Basket to open your photo library so you can attach receipt images to purchases."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#1A4731",
           "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
+            "image": "./assets/brand/homebasket_reversed.png",
+            "imageWidth": 220
           }
         }
       ]
