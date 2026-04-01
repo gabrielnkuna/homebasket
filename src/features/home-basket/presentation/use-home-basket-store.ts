@@ -684,7 +684,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
 
     if (state.session.memberRole !== 'Owner') {
       set({
-        error: 'Only the household owner can change the cycle budget.',
+        error: 'Only the household owner can change the monthly budget.',
         notice: null,
       });
       return;
@@ -703,8 +703,8 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
         error: null,
         notice:
           monthlyBudgetCents > 0
-            ? `Cycle budget set to ${formatCurrencyInputValue(monthlyBudgetCents)}.`
-            : 'Cycle budget turned off for now.',
+            ? `Monthly budget set to ${formatCurrencyInputValue(monthlyBudgetCents)}.`
+            : 'Monthly budget turned off for now.',
       });
     } catch (error) {
       set({
@@ -712,7 +712,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
         error:
           error instanceof Error
             ? error.message
-            : 'Unable to update the cycle budget right now.',
+            : 'Unable to update the monthly budget right now.',
         notice: null,
       });
     }

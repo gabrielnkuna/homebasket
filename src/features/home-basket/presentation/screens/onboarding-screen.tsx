@@ -39,12 +39,12 @@ export default function OnboardingScreen() {
 
   return (
     <ScreenShell
-      eyebrow="Android first, ready for web and iOS"
+      eyebrow="Shared household shopping"
       title="Welcome to Home Basket"
       headerArt={<BrandHero width={180} />}
       headerAccessory={<BrandBadge />}
-      subtitle="Create a household or join one with an invite code. Home Basket now signs this device in behind the scenes first, so household membership is tied to a real device identity instead of just local state."
-      >
+      subtitle="Create a household, join one with an invite code, or restore an existing account."
+    >
       <SectionCard
         title="Choose how this device joins the household"
         description="Start a new household, join one with an invite code, or restore an existing account. The current device will reconnect to the same household automatically when live sync is enabled.">
@@ -231,7 +231,7 @@ export default function OnboardingScreen() {
 
           <View style={styles.formGrid}>
             <View style={styles.fieldBlock}>
-              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Cycle budget</Text>
+              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Monthly budget</Text>
               <TextInput
                 value={createHouseholdDraft.monthlyBudget}
                 onChangeText={(monthlyBudget) => updateCreateHouseholdDraft({ monthlyBudget })}
@@ -271,7 +271,7 @@ export default function OnboardingScreen() {
           </View>
 
           <Text style={[styles.demoHintCopy, { color: theme.textMuted }]}>
-            Leave the cycle budget blank if you want to start simple. You can switch budget tracking on later from Household.
+            Leave the monthly budget blank if you want to start simple. You can switch budget tracking on later from Household.
           </Text>
 
           <View style={styles.fieldBlock}>

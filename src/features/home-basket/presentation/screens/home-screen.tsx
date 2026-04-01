@@ -142,7 +142,7 @@ export default function HomeScreen() {
           helper="Bought items waiting for purchase logging"
         />
         <MetricCard
-          label={hasBudget ? 'Budget left' : 'Cycle budget'}
+          label={hasBudget ? 'Budget left' : 'Monthly budget'}
           value={
             hasBudget
               ? formatCurrency(

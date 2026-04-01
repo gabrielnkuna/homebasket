@@ -95,9 +95,48 @@ export default function HouseholdScreen() {
       headerAccessory={<BrandBadge />}
       subtitle="Keep the shared list simple: everyone can add items, one shopper closes the trip, and the household always sees the current state."
       badge={syncMode === 'firestore' ? 'Realtime Firestore + auth' : 'Demo repository'}>
+      {error ? <MessageBanner message={error} tone="error" /> : null}
+      {!error && notice ? <MessageBanner message={notice} /> : null}
+
+      <SectionCard
+        title="Household invite"
+        description="Share this code with another family member or domestic worker so they can join the same basket on their own device. Each device keeps its own linked member profile in live sync mode.">
+        <View
+          style={[
+            styles.inviteBox,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
+          ]}>
+          <Text style={[styles.inviteCode, { color: theme.text }]}>
+            {invite?.code ?? 'No invite generated yet'}
+          </Text>
+          <Text style={[styles.inviteCopy, { color: theme.textMuted }]}>
+            {invite
+              ? 'Latest active code for this household, ready for another authenticated device to join.'
+              : 'Generate the first invite code for this household.'}
+          </Text>
+        </View>
+
+        <View style={styles.actionRow}>
+          <ActionButton
+            label={invite ? 'Create fresh invite' : 'Generate invite'}
+            onPress={() => void createInvite()}
+            disabled={isSaving}
+          />
+          <ActionButton
+            label="Sign out on this device"
+            tone="secondary"
+            onPress={() => void signOut()}
+            disabled={isSaving}
+          />
+        </View>
+      </SectionCard>
+
       <View style={styles.metricGrid}>
         <MetricCard
-          label="Cycle budget"
+          label="Monthly budget"
           value={
             hasBudget
               ? formatCurrency(snapshot.household.monthlyBudgetCents, snapshot.household.currencyCode)
@@ -118,9 +157,6 @@ export default function HouseholdScreen() {
           tone="primary"
         />
       </View>
-
-      {error ? <MessageBanner message={error} tone="error" /> : null}
-      {!error && notice ? <MessageBanner message={notice} /> : null}
 
       <SectionCard
         title="Budget cycle"
@@ -167,17 +203,17 @@ export default function HouseholdScreen() {
               />
             </View>
             <Text style={[styles.supportText, { color: theme.textMuted }]}>
-              {formatCurrency(model.dashboard.budgetRemainingCents, snapshot.household.currencyCode)} left in the current household cycle budget.
+              {formatCurrency(model.dashboard.budgetRemainingCents, snapshot.household.currencyCode)} left in the current monthly budget for this household cycle.
             </Text>
           </>
         ) : (
           <Text style={[styles.supportText, { color: theme.textMuted }]}>
-            No cycle budget is active yet. Leave it off while the household gets comfortable, or turn it on below when you want spend tracking.
+            No monthly budget is active yet. Leave it off while the household gets comfortable, or turn it on below when you want spend tracking.
           </Text>
         )}
 
         <View style={styles.fieldBlock}>
-          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Cycle budget</Text>
+          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Monthly budget</Text>
           <View style={styles.formGrid}>
             <View style={styles.fieldBlock}>
               <TextInput
@@ -201,7 +237,7 @@ export default function HouseholdScreen() {
             {session?.memberRole === 'Owner' ? (
               <View style={styles.inlineActionBlock}>
                 <ActionButton
-                  label={monthlyBudgetInput.trim() ? 'Save cycle budget' : 'Turn budget off'}
+                  label={monthlyBudgetInput.trim() ? 'Save monthly budget' : 'Turn budget off'}
                   onPress={() => void saveMonthlyBudget(monthlyBudgetInput)}
                   disabled={isSaving}
                   tone="secondary"
@@ -212,7 +248,7 @@ export default function HouseholdScreen() {
           <Text style={[styles.supportText, { color: theme.textMuted }]}>
             {session?.memberRole === 'Owner'
               ? 'Leave it blank to keep budget tracking off for now.'
-              : 'Only the household owner can change the cycle budget.'}
+              : 'Only the household owner can change the monthly budget.'}
           </Text>
         </View>
 
@@ -262,7 +298,7 @@ export default function HouseholdScreen() {
         description="A lightweight category view of the current budget cycle, estimated from the purchased item mix in each purchase.">
         {model.dashboard.budgetCycleCategorySpend.length === 0 ? (
           <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
-            Record a few purchases first and Home Basket will show which categories are taking the biggest share of this cycle budget.
+            Record a few purchases first and Home Basket will show which categories are taking the biggest share of this monthly budget.
           </Text>
         ) : (
           model.dashboard.budgetCycleCategorySpend.slice(0, 5).map((insight) => (
@@ -633,42 +669,6 @@ export default function HouseholdScreen() {
           )}
         </SectionCard>
       ) : null}
-
-      <SectionCard
-        title="Household invite"
-        description="Share this code with another family member or domestic worker so they can join the same basket on their own device. Each device keeps its own linked member profile in live sync mode.">
-        <View
-          style={[
-            styles.inviteBox,
-            {
-              backgroundColor: theme.surface,
-              borderColor: theme.border,
-            },
-          ]}>
-          <Text style={[styles.inviteCode, { color: theme.text }]}>
-            {invite?.code ?? 'No invite generated yet'}
-          </Text>
-          <Text style={[styles.inviteCopy, { color: theme.textMuted }]}>
-            {invite
-              ? 'Latest active code for this household, ready for another authenticated device to join.'
-              : 'Generate the first invite code for this household.'}
-          </Text>
-        </View>
-
-        <View style={styles.actionRow}>
-          <ActionButton
-            label={invite ? 'Create fresh invite' : 'Generate invite'}
-            onPress={() => void createInvite()}
-            disabled={isSaving}
-          />
-          <ActionButton
-            label="Sign out on this device"
-            tone="secondary"
-            onPress={() => void signOut()}
-            disabled={isSaving}
-          />
-        </View>
-      </SectionCard>
 
       <SectionCard
         title="Household roster"
