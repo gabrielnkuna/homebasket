@@ -22,6 +22,7 @@ describe('createInMemoryHomeBasketAccessRepository', () => {
       {
         householdName: 'Home Basket',
         memberName: 'Naledi',
+        currencyCode: 'ZAR',
         primaryStore: 'Checkers Hyper',
         monthlyBudgetCents: 520000,
         budgetCycleAnchorDay: 25,
@@ -49,6 +50,7 @@ describe('createInMemoryHomeBasketAccessRepository', () => {
       {
         householdName: 'Home Basket',
         memberName: 'Themba',
+        currencyCode: 'USD',
         primaryStore: 'Checkers Hyper',
         monthlyBudgetCents: 520000,
         budgetCycleAnchorDay: 25,

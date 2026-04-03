@@ -4,9 +4,14 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Fonts, Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
+  getDeviceCurrencyCode,
+  getSuggestedCurrencyCodes,
+} from '@/shared/locale/currency-preferences';
+import {
   ActionButton,
   BrandBadge,
   BrandHero,
+  CurrencySelector,
   MessageBanner,
   PillButton,
   ScreenShell,
@@ -16,6 +21,7 @@ import { useHomeBasketStore } from '@/features/home-basket/presentation/use-home
 
 export default function OnboardingScreen() {
   const theme = useTheme();
+  const detectedCurrencyCode = getDeviceCurrencyCode();
   const syncMode = useHomeBasketStore((state) => state.syncMode);
   const demoInviteCode = useHomeBasketStore((state) => state.demoInviteCode);
   const authSession = useHomeBasketStore((state) => state.authSession);
@@ -36,10 +42,18 @@ export default function OnboardingScreen() {
   const refreshAccountStatus = useHomeBasketStore((state) => state.refreshAccountStatus);
   const createHousehold = useHomeBasketStore((state) => state.createHousehold);
   const joinHousehold = useHomeBasketStore((state) => state.joinHousehold);
+  const suggestedCurrencyCodes = React.useMemo(
+    () => getSuggestedCurrencyCodes(createHouseholdDraft.currencyCode || detectedCurrencyCode),
+    [createHouseholdDraft.currencyCode, detectedCurrencyCode]
+  );
+  const showBudgetCurrencySelector = createHouseholdDraft.monthlyBudget.trim().length > 0;
+  const currencyHelperText = detectedCurrencyCode
+    ? `Detected from this device: ${detectedCurrencyCode}. Change it if this household budgets in another currency.`
+    : 'Choose the currency this household uses. You can change it later from Household.';
 
   return (
     <ScreenShell
-      eyebrow="Shared household shopping"
+      eyebrow="Shared household shopping list"
       title="Welcome to Home Basket"
       headerArt={<BrandHero width={180} />}
       headerAccessory={<BrandBadge />}
@@ -47,7 +61,7 @@ export default function OnboardingScreen() {
     >
       <SectionCard
         title="Choose how this device joins the household"
-        description="Start a new household, join one with an invite code, or restore an existing account. The current device will reconnect to the same household automatically when live sync is enabled.">
+        description="Start a new household, join one with an invite code, or restore an existing account.">
         <View style={styles.rowWrap}>
           <PillButton
             label="Create household"
@@ -193,7 +207,7 @@ export default function OnboardingScreen() {
           title="Create a new household"
           description="This creates the first member, the shared household profile, and an invite code for everyone else.">
           <View style={styles.formGrid}>
-            <View style={styles.fieldBlock}>
+            <View style={styles.gridFieldBlock}>
               <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Household name</Text>
               <TextInput
                 value={createHouseholdDraft.householdName}
@@ -210,7 +224,7 @@ export default function OnboardingScreen() {
                 ]}
               />
             </View>
-            <View style={styles.fieldBlock}>
+            <View style={styles.gridFieldBlock}>
               <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Your name</Text>
               <TextInput
                 value={createHouseholdDraft.memberName}
@@ -230,7 +244,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View style={styles.formGrid}>
-            <View style={styles.fieldBlock}>
+            <View style={styles.gridFieldBlock}>
               <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Monthly budget</Text>
               <TextInput
                 value={createHouseholdDraft.monthlyBudget}
@@ -247,8 +261,21 @@ export default function OnboardingScreen() {
                   },
                 ]}
               />
+              <Text style={[styles.demoHintCopy, { color: theme.textMuted }]}>
+                Leave this blank if you want to start simple. You can switch budget tracking on later from Household.
+              </Text>
+              {showBudgetCurrencySelector ? (
+                <View style={styles.fieldBlock}>
+                  <CurrencySelector
+                    value={createHouseholdDraft.currencyCode}
+                    suggestions={suggestedCurrencyCodes}
+                    helperText={currencyHelperText}
+                    onChange={(currencyCode) => updateCreateHouseholdDraft({ currencyCode })}
+                  />
+                </View>
+              ) : null}
             </View>
-            <View style={styles.fieldBlock}>
+            <View style={styles.gridFieldBlock}>
               <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Pay day</Text>
               <TextInput
                 value={createHouseholdDraft.budgetCycleAnchorDay}
@@ -267,12 +294,11 @@ export default function OnboardingScreen() {
                   },
                 ]}
               />
+              <Text style={[styles.demoHintCopy, { color: theme.textMuted }]}>
+                Budgets and spend cycles will start on this pay day each month, not on the 1st.
+              </Text>
             </View>
           </View>
-
-          <Text style={[styles.demoHintCopy, { color: theme.textMuted }]}>
-            Leave the monthly budget blank if you want to start simple. You can switch budget tracking on later from Household.
-          </Text>
 
           <View style={styles.fieldBlock}>
             <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
@@ -417,6 +443,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   fieldBlock: {
+    gap: Spacing.two,
+  },
+  gridFieldBlock: {
     flexBasis: 220,
     flexGrow: 1,
     gap: Spacing.two,

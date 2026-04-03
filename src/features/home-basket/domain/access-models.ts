@@ -20,6 +20,7 @@ export interface HouseholdInvite {
 export interface CreateHouseholdInput {
   householdName: string;
   memberName: string;
+  currencyCode: string;
   primaryStore: string;
   monthlyBudgetCents: number;
   budgetCycleAnchorDay: number;

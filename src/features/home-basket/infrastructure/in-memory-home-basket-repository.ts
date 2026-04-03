@@ -21,6 +21,7 @@ import {
   HouseholdSnapshotListener,
   InMemoryHomeBasketDatabase,
 } from '@/features/home-basket/infrastructure/demo/create-demo-home-basket-database';
+import { normalizeCurrencyCode } from '@/shared/locale/currency-preferences';
 
 function cloneSnapshot(snapshot: HomeBasketSnapshot): HomeBasketSnapshot {
   return {
@@ -83,6 +84,17 @@ export function createInMemoryHomeBasketRepository(
         const listeners = database.listeners.get(householdId);
         listeners?.delete(householdListener);
       };
+    },
+    async updateCurrencyCode(householdId, currencyCode: string) {
+      const snapshot = requireHousehold(database, householdId);
+      database.households.set(householdId, {
+        ...snapshot,
+        household: {
+          ...snapshot.household,
+          currencyCode: normalizeCurrencyCode(currencyCode),
+        },
+      });
+      notifyHousehold(database, householdId);
     },
     async updateBudgetCycleAnchorDay(householdId, budgetCycleAnchorDay: number) {
       const snapshot = requireHousehold(database, householdId);

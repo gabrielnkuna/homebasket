@@ -122,6 +122,285 @@ export default function HomeScreen() {
   const model = buildHomeScreenModel(snapshot, filter, selectedMemberId);
   const selectedMember = model.selectedMember;
   const hasBudget = snapshot.household.monthlyBudgetCents > 0;
+  const hasActiveBasketItems = model.groupedItems.length > 0;
+
+  const activeBasketSection = (
+    <SectionCard
+      title="Active basket"
+      description="Use the filters to focus on pending or already-bought items.">
+      <View style={styles.rowWrap}>
+        {shoppingFilters.map((itemFilter) => (
+          <PillButton
+            key={itemFilter}
+            label={itemFilter === 'all' ? 'All items' : itemFilter === 'pending' ? 'Pending' : 'Bought'}
+            active={filter === itemFilter}
+            onPress={() => setFilter(itemFilter)}
+          />
+        ))}
+      </View>
+
+      {model.groupedItems.length === 0 ? (
+        <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
+          No items match this filter yet.
+        </Text>
+      ) : (
+        model.groupedItems.map((group) => (
+          <View key={group.category} style={styles.groupBlock}>
+            <Text style={[styles.groupTitle, { color: theme.text }]}>{group.category}</Text>
+
+            {group.items.map((item) => {
+              const addedBy = snapshot.members.find((member) => member.id === item.addedByMemberId);
+              const isBought = item.status === 'bought';
+              const isEditing = editingItemId === item.id;
+
+              return (
+                <View
+                  key={item.id}
+                  style={[
+                    styles.itemRow,
+                    {
+                      backgroundColor: isBought ? theme.primarySoft : theme.surface,
+                      borderColor: theme.border,
+                    },
+                  ]}>
+                  <View style={styles.itemCopy}>
+                    {isEditing ? (
+                      <View style={styles.editForm}>
+                        <View style={styles.formGrid}>
+                          <View style={styles.gridFieldBlock}>
+                            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+                              Item name
+                            </Text>
+                            <TextInput
+                              value={itemEditDraft.name}
+                              onChangeText={(name) => updateItemEditDraft({ name })}
+                              placeholder="Milk, bread..."
+                              placeholderTextColor={theme.textMuted}
+                              style={[
+                                styles.input,
+                                {
+                                  backgroundColor: theme.surfaceMuted,
+                                  borderColor: theme.border,
+                                  color: theme.text,
+                                },
+                              ]}
+                            />
+                          </View>
+                          <View style={styles.gridFieldBlock}>
+                            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+                              Quantity
+                            </Text>
+                            <TextInput
+                              value={itemEditDraft.quantity}
+                              onChangeText={(quantity) => updateItemEditDraft({ quantity })}
+                              placeholder="1 pack"
+                              placeholderTextColor={theme.textMuted}
+                              style={[
+                                styles.input,
+                                {
+                                  backgroundColor: theme.surfaceMuted,
+                                  borderColor: theme.border,
+                                  color: theme.text,
+                                },
+                              ]}
+                            />
+                          </View>
+                          <View style={styles.gridFieldBlock}>
+                            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+                              Category
+                            </Text>
+                            <TextInput
+                              value={itemEditDraft.category}
+                              onChangeText={(category) => updateItemEditDraft({ category })}
+                              placeholder="Produce, Pantry, Gardening..."
+                              placeholderTextColor={theme.textMuted}
+                              style={[
+                                styles.input,
+                                {
+                                  backgroundColor: theme.surfaceMuted,
+                                  borderColor: theme.border,
+                                  color: theme.text,
+                                },
+                              ]}
+                            />
+                          </View>
+                        </View>
+                        <Text style={[styles.itemMeta, { color: theme.textMuted }]}>
+                          Added by {addedBy?.name ?? 'Unknown'} on {formatShortDate(item.addedAt)}
+                        </Text>
+                      </View>
+                    ) : (
+                      <>
+                        <View style={styles.itemHeading}>
+                          <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>
+                          <View
+                            style={[
+                              styles.statusPill,
+                              {
+                                backgroundColor: isBought ? theme.primary : theme.surfaceMuted,
+                                borderColor: theme.border,
+                              },
+                            ]}>
+                            <Text
+                              style={[
+                                styles.statusLabel,
+                                { color: isBought ? '#FFFFFF' : theme.textMuted },
+                              ]}>
+                              {isBought ? 'Bought' : 'Pending'}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text style={[styles.itemMeta, { color: theme.textMuted }]}>
+                          {item.quantity} - {addedBy?.name ?? 'Unknown'} - {formatShortDate(item.addedAt)}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                  <View style={styles.listActionColumn}>
+                    {isEditing ? (
+                      <>
+                        <ActionButton
+                          label="Save"
+                          onPress={() => void saveItemEdits()}
+                          disabled={isSaving}
+                        />
+                        <ActionButton
+                          label="Cancel"
+                          tone="secondary"
+                          onPress={cancelEditingItem}
+                          disabled={isSaving}
+                        />
+                        <ActionButton
+                          label="Remove"
+                          tone="secondary"
+                          onPress={() => void deleteItem(item.id)}
+                          disabled={isSaving}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <ActionButton
+                          label={isBought ? 'Undo' : 'Mark bought'}
+                          tone={isBought ? 'secondary' : 'primary'}
+                          onPress={() => void toggleItemStatus(item.id)}
+                          disabled={isSaving}
+                        />
+                        <ActionButton
+                          label="Edit"
+                          tone="secondary"
+                          onPress={() => startEditingItem(item.id)}
+                          disabled={isSaving}
+                        />
+                      </>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        ))
+      )}
+    </SectionCard>
+  );
+
+  const addItemSection = (
+    <SectionCard
+      title="Add something fast"
+      description="The acting member is who the app credits for new shopping items.">
+      <View style={styles.rowWrap}>
+        {snapshot.members.map((member) => (
+          <PillButton
+            key={member.id}
+            label={member.name}
+            active={member.id === selectedMember.id}
+            onPress={() => setSelectedMember(member.id)}
+          />
+        ))}
+      </View>
+
+      <View style={styles.formGrid}>
+        <View style={styles.gridFieldBlock}>
+          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Item name</Text>
+          <TextInput
+            value={addItemDraft.name}
+            onChangeText={(name) => updateAddItemDraft({ name })}
+            placeholder="Milk, rice, toothpaste..."
+            placeholderTextColor={theme.textMuted}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+                color: theme.text,
+              },
+            ]}
+          />
+        </View>
+
+        <View style={styles.gridFieldBlock}>
+          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Quantity</Text>
+          <TextInput
+            value={addItemDraft.quantity}
+            onChangeText={(quantity) => updateAddItemDraft({ quantity })}
+            placeholder="1 pack"
+            placeholderTextColor={theme.textMuted}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+                color: theme.text,
+              },
+            ]}
+          />
+        </View>
+      </View>
+
+      <View style={styles.fieldBlock}>
+        <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Category</Text>
+        <View style={styles.rowWrap}>
+          {shoppingCategories.map((category) => (
+            <PillButton
+              key={category}
+              label={category}
+              active={addItemDraft.category === category}
+              onPress={() => updateAddItemDraft({ category, customCategory: '' })}
+            />
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.fieldBlock}>
+        <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+          Custom category
+        </Text>
+        <TextInput
+          value={addItemDraft.customCategory}
+          onChangeText={(customCategory) => updateAddItemDraft({ customCategory })}
+          placeholder="Optional: Gardening, Hardware..."
+          placeholderTextColor={theme.textMuted}
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+              color: theme.text,
+            },
+          ]}
+        />
+        <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
+          Leave this blank to use the selected category above. New categories appear as their own
+          section headers in Active basket.
+        </Text>
+      </View>
+
+      <ActionButton
+        label={`Add as ${selectedMember.name}`}
+        onPress={() => void addItem()}
+        disabled={isSaving || !addItemDraft.name.trim()}
+      />
+    </SectionCard>
+  );
 
   return (
     <ScreenShell
@@ -259,279 +538,8 @@ export default function HomeScreen() {
         </SectionCard>
       ) : null}
 
-      <SectionCard
-        title="Add something fast"
-        description="The acting member is who the app credits for new shopping items.">
-        <View style={styles.rowWrap}>
-          {snapshot.members.map((member) => (
-            <PillButton
-              key={member.id}
-              label={member.name}
-              active={member.id === selectedMember.id}
-              onPress={() => setSelectedMember(member.id)}
-            />
-          ))}
-        </View>
-
-        <View style={styles.formGrid}>
-          <View style={styles.fieldBlock}>
-            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Item name</Text>
-            <TextInput
-              value={addItemDraft.name}
-              onChangeText={(name) => updateAddItemDraft({ name })}
-              placeholder="Milk, rice, toothpaste..."
-              placeholderTextColor={theme.textMuted}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.surface,
-                  borderColor: theme.border,
-                  color: theme.text,
-                },
-              ]}
-            />
-          </View>
-
-          <View style={styles.fieldBlock}>
-            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Quantity</Text>
-            <TextInput
-              value={addItemDraft.quantity}
-              onChangeText={(quantity) => updateAddItemDraft({ quantity })}
-              placeholder="1 pack"
-              placeholderTextColor={theme.textMuted}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.surface,
-                  borderColor: theme.border,
-                  color: theme.text,
-                },
-              ]}
-            />
-          </View>
-        </View>
-
-        <View style={styles.fieldBlock}>
-          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Category</Text>
-          <View style={styles.rowWrap}>
-            {shoppingCategories.map((category) => (
-              <PillButton
-                key={category}
-                label={category}
-                active={addItemDraft.category === category}
-                onPress={() => updateAddItemDraft({ category, customCategory: '' })}
-              />
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.fieldBlock}>
-          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
-            Custom category
-          </Text>
-          <TextInput
-            value={addItemDraft.customCategory}
-            onChangeText={(customCategory) => updateAddItemDraft({ customCategory })}
-            placeholder="Optional: Gardening, Hardware..."
-            placeholderTextColor={theme.textMuted}
-            style={[
-              styles.input,
-              {
-                backgroundColor: theme.surface,
-                borderColor: theme.border,
-                color: theme.text,
-              },
-            ]}
-          />
-          <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
-            Leave this blank to use the selected category above. New categories appear as their own
-            section headers in Active basket.
-          </Text>
-        </View>
-
-        <ActionButton
-          label={`Add as ${selectedMember.name}`}
-          onPress={() => void addItem()}
-          disabled={isSaving || !addItemDraft.name.trim()}
-        />
-      </SectionCard>
-
-      <SectionCard
-        title="Active basket"
-        description="Use the filters to focus on pending or already-bought items.">
-        <View style={styles.rowWrap}>
-          {shoppingFilters.map((itemFilter) => (
-            <PillButton
-              key={itemFilter}
-              label={itemFilter === 'all' ? 'All items' : itemFilter === 'pending' ? 'Pending' : 'Bought'}
-              active={filter === itemFilter}
-              onPress={() => setFilter(itemFilter)}
-            />
-          ))}
-        </View>
-
-        {model.groupedItems.length === 0 ? (
-          <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
-            No items match this filter yet.
-          </Text>
-        ) : (
-          model.groupedItems.map((group) => (
-            <View key={group.category} style={styles.groupBlock}>
-              <Text style={[styles.groupTitle, { color: theme.text }]}>{group.category}</Text>
-
-              {group.items.map((item) => {
-                const addedBy = snapshot.members.find((member) => member.id === item.addedByMemberId);
-                const isBought = item.status === 'bought';
-                const isEditing = editingItemId === item.id;
-
-                return (
-                  <View
-                    key={item.id}
-                    style={[
-                      styles.itemRow,
-                      {
-                        backgroundColor: isBought ? theme.primarySoft : theme.surface,
-                        borderColor: theme.border,
-                      },
-                    ]}>
-                    <View style={styles.itemCopy}>
-                      {isEditing ? (
-                        <View style={styles.editForm}>
-                          <View style={styles.formGrid}>
-                            <View style={styles.fieldBlock}>
-                              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
-                                Item name
-                              </Text>
-                              <TextInput
-                                value={itemEditDraft.name}
-                                onChangeText={(name) => updateItemEditDraft({ name })}
-                                placeholder="Milk, bread..."
-                                placeholderTextColor={theme.textMuted}
-                                style={[
-                                  styles.input,
-                                  {
-                                    backgroundColor: theme.surfaceMuted,
-                                    borderColor: theme.border,
-                                    color: theme.text,
-                                  },
-                                ]}
-                              />
-                            </View>
-                            <View style={styles.fieldBlock}>
-                              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
-                                Quantity
-                              </Text>
-                              <TextInput
-                                value={itemEditDraft.quantity}
-                                onChangeText={(quantity) => updateItemEditDraft({ quantity })}
-                                placeholder="1 pack"
-                                placeholderTextColor={theme.textMuted}
-                                style={[
-                                  styles.input,
-                                  {
-                                    backgroundColor: theme.surfaceMuted,
-                                    borderColor: theme.border,
-                                    color: theme.text,
-                                  },
-                                ]}
-                              />
-                            </View>
-                            <View style={styles.fieldBlock}>
-                              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
-                                Category
-                              </Text>
-                              <TextInput
-                                value={itemEditDraft.category}
-                                onChangeText={(category) => updateItemEditDraft({ category })}
-                                placeholder="Produce, Pantry, Gardening..."
-                                placeholderTextColor={theme.textMuted}
-                                style={[
-                                  styles.input,
-                                  {
-                                    backgroundColor: theme.surfaceMuted,
-                                    borderColor: theme.border,
-                                    color: theme.text,
-                                  },
-                                ]}
-                              />
-                            </View>
-                          </View>
-                          <Text style={[styles.itemMeta, { color: theme.textMuted }]}>
-                            Added by {addedBy?.name ?? 'Unknown'} on {formatShortDate(item.addedAt)}
-                          </Text>
-                        </View>
-                      ) : (
-                        <>
-                          <View style={styles.itemHeading}>
-                            <Text style={[styles.itemName, { color: theme.text }]}>{item.name}</Text>
-                            <View
-                              style={[
-                                styles.statusPill,
-                                {
-                                  backgroundColor: isBought ? theme.primary : theme.surfaceMuted,
-                                  borderColor: theme.border,
-                                },
-                              ]}>
-                              <Text
-                                style={[
-                                  styles.statusLabel,
-                                  { color: isBought ? '#FFFFFF' : theme.textMuted },
-                                ]}>
-                                {isBought ? 'Bought' : 'Pending'}
-                              </Text>
-                            </View>
-                          </View>
-                          <Text style={[styles.itemMeta, { color: theme.textMuted }]}>
-                            {item.quantity} - {addedBy?.name ?? 'Unknown'} - {formatShortDate(item.addedAt)}
-                          </Text>
-                        </>
-                      )}
-                    </View>
-                    <View style={styles.listActionColumn}>
-                      {isEditing ? (
-                        <>
-                          <ActionButton
-                            label="Save"
-                            onPress={() => void saveItemEdits()}
-                            disabled={isSaving}
-                          />
-                          <ActionButton
-                            label="Cancel"
-                            tone="secondary"
-                            onPress={cancelEditingItem}
-                            disabled={isSaving}
-                          />
-                          <ActionButton
-                            label="Remove"
-                            tone="secondary"
-                            onPress={() => void deleteItem(item.id)}
-                            disabled={isSaving}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <ActionButton
-                            label={isBought ? 'Undo' : 'Mark bought'}
-                            tone={isBought ? 'secondary' : 'primary'}
-                            onPress={() => void toggleItemStatus(item.id)}
-                            disabled={isSaving}
-                          />
-                          <ActionButton
-                            label="Edit"
-                            tone="secondary"
-                            onPress={() => startEditingItem(item.id)}
-                            disabled={isSaving}
-                          />
-                        </>
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          ))
-        )}
-      </SectionCard>
+      {hasActiveBasketItems ? activeBasketSection : addItemSection}
+      {hasActiveBasketItems ? addItemSection : activeBasketSection}
     </ScreenShell>
   );
 }
@@ -587,6 +595,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   fieldBlock: {
+    gap: Spacing.two,
+  },
+  gridFieldBlock: {
     flexBasis: 220,
     flexGrow: 1,
     gap: Spacing.two,

@@ -12,8 +12,13 @@ import { useTheme } from '@/hooks/use-theme';
 import { formatCurrency, formatCurrencyInputValue } from '@/shared/format/currency';
 import { formatLongDate } from '@/shared/format/date';
 import {
+  getDeviceCurrencyCode,
+  getSuggestedCurrencyCodes,
+} from '@/shared/locale/currency-preferences';
+import {
   ActionButton,
   BrandBadge,
+  CurrencySelector,
   MessageBanner,
   MetricCard,
   PillButton,
@@ -39,6 +44,7 @@ export default function HouseholdScreen() {
   const createReminder = useHomeBasketStore((state) => state.createReminder);
   const addReminderToBasket = useHomeBasketStore((state) => state.addReminderToBasket);
   const deleteReminder = useHomeBasketStore((state) => state.deleteReminder);
+  const saveCurrencyCode = useHomeBasketStore((state) => state.saveCurrencyCode);
   const saveBudgetCycleAnchorDay = useHomeBasketStore((state) => state.saveBudgetCycleAnchorDay);
   const saveMonthlyBudget = useHomeBasketStore((state) => state.saveMonthlyBudget);
   const sendPasswordReset = useHomeBasketStore((state) => state.sendPasswordReset);
@@ -48,9 +54,13 @@ export default function HouseholdScreen() {
   const isSaving = useHomeBasketStore((state) => state.isSaving);
   const error = useHomeBasketStore((state) => state.error);
   const notice = useHomeBasketStore((state) => state.notice);
+  const detectedCurrencyCode = getDeviceCurrencyCode();
   const budgetCycleAnchorDay = snapshot?.household.budgetCycleAnchorDay ?? 25;
   const [budgetCycleAnchorDayInput, setBudgetCycleAnchorDayInput] = React.useState(
     String(budgetCycleAnchorDay)
+  );
+  const [currencyCodeInput, setCurrencyCodeInput] = React.useState(
+    snapshot?.household.currencyCode ?? detectedCurrencyCode ?? 'USD'
   );
   const [monthlyBudgetInput, setMonthlyBudgetInput] = React.useState(
     snapshot?.household.monthlyBudgetCents
@@ -61,6 +71,10 @@ export default function HouseholdScreen() {
   React.useEffect(() => {
     setBudgetCycleAnchorDayInput(String(budgetCycleAnchorDay));
   }, [budgetCycleAnchorDay]);
+
+  React.useEffect(() => {
+    setCurrencyCodeInput(snapshot?.household.currencyCode ?? detectedCurrencyCode ?? 'USD');
+  }, [detectedCurrencyCode, snapshot?.household.currencyCode]);
 
   React.useEffect(() => {
     setMonthlyBudgetInput(
@@ -87,6 +101,15 @@ export default function HouseholdScreen() {
 
   const model = buildHouseholdScreenModel(snapshot);
   const hasBudget = snapshot.household.monthlyBudgetCents > 0;
+  const suggestedCurrencyCodes = getSuggestedCurrencyCodes(
+    currencyCodeInput || snapshot.household.currencyCode
+  );
+  const currencyHelperText =
+    session?.memberRole === 'Owner'
+      ? detectedCurrencyCode
+        ? `Detected from this device: ${detectedCurrencyCode}. Change it if the household budgets in another currency.`
+        : 'Choose the currency this household uses for budgets and purchases.'
+      : 'Only the household owner can change the household currency.';
 
   return (
     <ScreenShell
@@ -213,9 +236,29 @@ export default function HouseholdScreen() {
         )}
 
         <View style={styles.fieldBlock}>
+          <CurrencySelector
+            value={currencyCodeInput}
+            suggestions={suggestedCurrencyCodes}
+            helperText={currencyHelperText}
+            editable={session?.memberRole === 'Owner'}
+            onChange={setCurrencyCodeInput}
+          />
+          {session?.memberRole === 'Owner' ? (
+            <View style={styles.actionRow}>
+              <ActionButton
+                label="Save currency"
+                onPress={() => void saveCurrencyCode(currencyCodeInput)}
+                disabled={isSaving}
+                tone="secondary"
+              />
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.fieldBlock}>
           <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Monthly budget</Text>
           <View style={styles.formGrid}>
-            <View style={styles.fieldBlock}>
+            <View style={styles.gridFieldBlock}>
               <TextInput
                 value={monthlyBudgetInput}
                 onChangeText={setMonthlyBudgetInput}
@@ -255,7 +298,7 @@ export default function HouseholdScreen() {
         <View style={styles.fieldBlock}>
           <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Cycle start day</Text>
           <View style={styles.formGrid}>
-            <View style={styles.fieldBlock}>
+            <View style={styles.gridFieldBlock}>
               <TextInput
                 value={budgetCycleAnchorDayInput}
                 onChangeText={setBudgetCycleAnchorDayInput}
@@ -359,7 +402,7 @@ export default function HouseholdScreen() {
         title="Shopping reminders"
         description="Set lightweight recurring reminders for staples so the basket nudges the household at the right time without becoming a full planner.">
         <View style={styles.formGrid}>
-          <View style={styles.fieldBlock}>
+          <View style={styles.gridFieldBlock}>
             <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Reminder</Text>
             <TextInput
               value={reminderDraft.title}
@@ -376,7 +419,7 @@ export default function HouseholdScreen() {
               ]}
             />
           </View>
-          <View style={styles.fieldBlock}>
+          <View style={styles.gridFieldBlock}>
             <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Quantity</Text>
             <TextInput
               value={reminderDraft.quantity}
@@ -393,7 +436,7 @@ export default function HouseholdScreen() {
               ]}
             />
           </View>
-          <View style={styles.fieldBlock}>
+          <View style={styles.gridFieldBlock}>
             <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Next due date</Text>
             <TextInput
               value={reminderDraft.nextDueAt}
@@ -594,7 +637,7 @@ export default function HouseholdScreen() {
           ) : (
             <>
               <View style={styles.formGrid}>
-                <View style={styles.fieldBlock}>
+                <View style={styles.gridFieldBlock}>
                   <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Email</Text>
                   <TextInput
                     autoCapitalize="none"
@@ -614,7 +657,7 @@ export default function HouseholdScreen() {
                     ]}
                   />
                 </View>
-                <View style={styles.fieldBlock}>
+                <View style={styles.gridFieldBlock}>
                   <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Password</Text>
                   <TextInput
                     secureTextEntry
@@ -632,7 +675,7 @@ export default function HouseholdScreen() {
                     ]}
                   />
                 </View>
-                <View style={styles.fieldBlock}>
+                <View style={styles.gridFieldBlock}>
                   <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
                     Confirm password
                   </Text>
@@ -776,6 +819,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   fieldBlock: {
+    gap: Spacing.two,
+  },
+  gridFieldBlock: {
     flexBasis: 220,
     flexGrow: 1,
     gap: Spacing.two,

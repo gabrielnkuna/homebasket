@@ -1,7 +1,12 @@
+import {
+  getDefaultCurrencyCode,
+  getDeviceLocale,
+} from '@/shared/locale/currency-preferences';
+
 export function formatCurrency(
   cents: number,
-  currencyCode = 'ZAR',
-  locale = 'en-ZA'
+  currencyCode = getDefaultCurrencyCode(),
+  locale = getDeviceLocale()
 ): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',

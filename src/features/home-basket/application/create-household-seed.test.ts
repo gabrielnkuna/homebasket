@@ -12,6 +12,7 @@ describe('createHouseholdSeed', () => {
       {
         householdName: 'Family Nest',
         memberName: 'Naledi Mokoena',
+        currencyCode: 'ZAR',
         primaryStore: 'Checkers Hyper',
         monthlyBudgetCents: 480000,
         budgetCycleAnchorDay: 25,
@@ -28,6 +29,7 @@ describe('createHouseholdSeed', () => {
     expect(result.snapshot.household).toMatchObject({
       id: 'household-1',
       name: 'Family Nest',
+      currencyCode: 'ZAR',
       shopperOfWeekMemberId: 'member-1',
       monthlyBudgetCents: 480000,
       budgetCycleAnchorDay: 25,
@@ -46,6 +48,7 @@ describe('createHouseholdSeed', () => {
       {
         householdName: 'Family Nest',
         memberName: 'Naledi Mokoena',
+        currencyCode: 'USD',
         primaryStore: '',
         monthlyBudgetCents: 0,
         budgetCycleAnchorDay: 25,
@@ -60,6 +63,7 @@ describe('createHouseholdSeed', () => {
     );
 
     expect(result.snapshot.household.primaryStore).toBe('');
+    expect(result.snapshot.household.currencyCode).toBe('USD');
     expect(result.snapshot.household.monthlyBudgetCents).toBe(0);
   });
 });
@@ -70,6 +74,7 @@ describe('addMemberToHouseholdSnapshot', () => {
       {
         householdName: 'Home Basket',
         memberName: 'Themba',
+        currencyCode: 'GBP',
         primaryStore: 'Checkers Hyper',
         monthlyBudgetCents: 520000,
         budgetCycleAnchorDay: 25,

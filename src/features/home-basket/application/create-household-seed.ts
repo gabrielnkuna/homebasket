@@ -6,6 +6,7 @@ import {
 import { HomeBasketSnapshot } from '@/features/home-basket/domain/models';
 import { normalizeBudgetCycleAnchorDay } from '@/features/home-basket/application/budget-cycle';
 import { buildInviteCode } from '@/features/home-basket/application/invite-code';
+import { normalizeCurrencyCode } from '@/shared/locale/currency-preferences';
 
 type HouseholdSeedOptions = {
   now?: string;
@@ -47,12 +48,13 @@ export function createHouseholdSeed(
   const inviteToken = options.createInviteToken?.() ?? householdId.slice(-5);
   const inviteCode = buildInviteCode(householdName, inviteToken);
   const budgetCycleAnchorDay = normalizeBudgetCycleAnchorDay(input.budgetCycleAnchorDay);
+  const currencyCode = normalizeCurrencyCode(input.currencyCode);
 
   const snapshot: HomeBasketSnapshot = {
     household: {
       id: householdId,
       name: householdName,
-      currencyCode: 'ZAR',
+      currencyCode,
       primaryStore: input.primaryStore.trim(),
       shopperOfWeekMemberId: memberId,
       monthlyBudgetCents: Math.max(input.monthlyBudgetCents, 0),

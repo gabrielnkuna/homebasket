@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import {
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleProp,
@@ -48,60 +49,70 @@ export function ScreenShell({
   });
 
   return (
-    <ScrollView
-      style={[styles.scroll, { backgroundColor: theme.background }]}
-      contentContainerStyle={[
-        styles.scrollContent,
-        {
-          paddingTop: topPadding,
-          paddingBottom: bottomPadding,
-          paddingLeft: Spacing.four,
-          paddingRight: Spacing.four,
-        },
-      ]}>
-      <View style={[styles.frame, contentStyle]}>
-        <View
-          style={[
-            styles.headerCard,
-            {
-              backgroundColor: theme.surface,
-              borderColor: theme.border,
-            },
-            Shadows.card,
-          ]}>
-          <View style={styles.headerContent}>
-            <View style={styles.headingStack}>
-              {headerArt ? <View style={styles.headerArt}>{headerArt}</View> : null}
-              {eyebrow ? <Text style={[styles.eyebrow, { color: theme.primary }]}>{eyebrow}</Text> : null}
-              <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-              {subtitle ? <Text style={[styles.subtitle, { color: theme.textMuted }]}>{subtitle}</Text> : null}
-            </View>
+    <KeyboardAvoidingView
+      style={[styles.keyboardRoot, { backgroundColor: theme.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        style={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: topPadding,
+            paddingBottom: bottomPadding,
+            paddingLeft: Spacing.four,
+            paddingRight: Spacing.four,
+          },
+        ]}>
+        <View style={[styles.frame, contentStyle]}>
+          <View
+            style={[
+              styles.headerCard,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+              },
+              Shadows.card,
+            ]}>
+            <View style={styles.headerContent}>
+              <View style={styles.headingStack}>
+                {headerArt ? <View style={styles.headerArt}>{headerArt}</View> : null}
+                {eyebrow ? <Text style={[styles.eyebrow, { color: theme.primary }]}>{eyebrow}</Text> : null}
+                <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+                {subtitle ? <Text style={[styles.subtitle, { color: theme.textMuted }]}>{subtitle}</Text> : null}
+              </View>
 
-            <View style={styles.headerMeta}>
-              {badge ? (
-                <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: theme.primarySoft,
-                      borderColor: theme.border,
-                    },
-                  ]}>
-                  <Text style={[styles.badgeText, { color: theme.primaryStrong }]}>{badge}</Text>
-                </View>
-              ) : null}
-              {headerAccessory}
+              <View style={styles.headerMeta}>
+                {badge ? (
+                  <View
+                    style={[
+                      styles.badge,
+                      {
+                        backgroundColor: theme.primarySoft,
+                        borderColor: theme.border,
+                      },
+                    ]}>
+                    <Text style={[styles.badgeText, { color: theme.primaryStrong }]}>{badge}</Text>
+                  </View>
+                ) : null}
+                {headerAccessory}
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.sectionStack}>{children}</View>
-      </View>
-    </ScrollView>
+          <View style={styles.sectionStack}>{children}</View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardRoot: {
+    flex: 1,
+  },
   scroll: {
     flex: 1,
   },

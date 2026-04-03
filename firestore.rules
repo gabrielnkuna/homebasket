@@ -66,6 +66,7 @@ service cloud.firestore {
         ]) &&
         request.resource.data.name is string &&
         request.resource.data.currencyCode is string &&
+        request.resource.data.currencyCode.size() == 3 &&
         request.resource.data.primaryStore is string &&
         request.resource.data.budgetCycleAnchorDay is number &&
         request.resource.data.budgetCycleAnchorDay >= 1 &&
@@ -91,11 +92,14 @@ service cloud.firestore {
         );
     }
 
-    function validHouseholdBudgetSettingsUpdate() {
+    function validHouseholdSettingsUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'currencyCode',
           'budgetCycleAnchorDay',
           'monthlyBudgetCents'
         ]) &&
+        request.resource.data.currencyCode is string &&
+        request.resource.data.currencyCode.size() == 3 &&
         request.resource.data.budgetCycleAnchorDay is number &&
         request.resource.data.budgetCycleAnchorDay >= 1 &&
         request.resource.data.budgetCycleAnchorDay <= 31 &&
@@ -290,7 +294,7 @@ service cloud.firestore {
     match /households/{householdId} {
       allow read: if isHouseholdMember(householdId);
       allow create: if isSignedIn() && validHouseholdCreate();
-      allow update: if isHouseholdOwner(householdId) && validHouseholdBudgetSettingsUpdate();
+      allow update: if isHouseholdOwner(householdId) && validHouseholdSettingsUpdate();
       allow delete: if false;
 
       match /members/{memberId} {

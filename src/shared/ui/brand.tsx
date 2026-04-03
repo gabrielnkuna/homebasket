@@ -59,7 +59,7 @@ export function BrandNavLockup() {
       <View style={styles.navCopy}>
         <Text style={[styles.navTitle, { color: theme.text }]}>Home Basket</Text>
         <Text style={[styles.navSubtitle, { color: theme.textMuted }]}>
-          Shared shopping for the whole household
+          Shared shopping list for the whole household
         </Text>
       </View>
     </View>

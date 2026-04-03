@@ -10,15 +10,22 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/brand/homebasket_appicon.png",
-      "bundleIdentifier": "com.transcripe.homebasket"
+      "bundleIdentifier": "com.transcripe.homebasket",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.transcripe.homebasket",
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#1A4731",
         "foregroundImage": "./assets/brand/homebasket_appicon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -46,6 +53,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5e5f1c9d-c715-442c-bf0b-758c135c7558"
+      }
+    },
+    "owner": "transcripe"
   }
 }

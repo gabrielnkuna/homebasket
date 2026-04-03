@@ -6,15 +6,42 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyD7lsckbBD1nJdMv7zXFTD8nK88D2B6bEs",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "household-manager-apps.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "household-manager-apps",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "household-manager-apps.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "15512150449",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:15512150449:web:8016de5830db984352dd90",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-5KNY2S69QD"
+      }
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyD7lsckbBD1nJdMv7zXFTD8nK88D2B6bEs",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "household-manager-apps.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "household-manager-apps",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "household-manager-apps.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "15512150449",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:15512150449:web:8016de5830db984352dd90",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-5KNY2S69QD"
+      },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyD7lsckbBD1nJdMv7zXFTD8nK88D2B6bEs",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "household-manager-apps.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "household-manager-apps",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "household-manager-apps.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "15512150449",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:15512150449:web:8016de5830db984352dd90",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-5KNY2S69QD"
+      },
       "android": {
         "buildType": "app-bundle"
       }

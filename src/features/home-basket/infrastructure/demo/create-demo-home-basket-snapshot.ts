@@ -1,4 +1,5 @@
 import { HomeBasketSnapshot } from '@/features/home-basket/domain/models';
+import { getDefaultCurrencyCode } from '@/shared/locale/currency-preferences';
 
 export const HOME_BASKET_HOUSEHOLD_ID = 'home-basket-household';
 export const HOME_BASKET_DEMO_INVITE_CODE = 'HB-DEMO-2026';
@@ -14,7 +15,7 @@ export function createDemoHomeBasketSnapshot(
     household: {
       id: HOME_BASKET_HOUSEHOLD_ID,
       name: 'Home Basket',
-      currencyCode: 'ZAR',
+      currencyCode: getDefaultCurrencyCode(),
       primaryStore: 'Checkers Hyper',
       shopperOfWeekMemberId: 'member-themba',
       monthlyBudgetCents: 520000,

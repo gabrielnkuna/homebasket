@@ -39,6 +39,10 @@ import {
   HomeBasketRepository,
   UpdateItemInput,
 } from '@/features/home-basket/domain/repository';
+import {
+  coerceCurrencyCode,
+  normalizeCurrencyCode,
+} from '@/shared/locale/currency-preferences';
 import { parseDateInputValue } from '@/shared/format/date';
 
 function mapHousehold(snapshot: QueryDocumentSnapshot<DocumentData>): Household {
@@ -47,7 +51,7 @@ function mapHousehold(snapshot: QueryDocumentSnapshot<DocumentData>): Household 
   return {
     id: snapshot.id,
     name: data.name,
-    currencyCode: data.currencyCode,
+    currencyCode: coerceCurrencyCode(data.currencyCode),
     primaryStore: data.primaryStore,
     shopperOfWeekMemberId: data.shopperOfWeekMemberId,
     monthlyBudgetCents: data.monthlyBudgetCents,
@@ -316,6 +320,11 @@ export function createFirestoreHomeBasketRepository(
         tripsUnsubscribe();
         remindersUnsubscribe();
       };
+    },
+    async updateCurrencyCode(householdId, currencyCode: string) {
+      await updateDoc(doc(db, 'households', householdId), {
+        currencyCode: normalizeCurrencyCode(currencyCode),
+      });
     },
     async updateBudgetCycleAnchorDay(householdId, budgetCycleAnchorDay: number) {
       await updateDoc(doc(db, 'households', householdId), {

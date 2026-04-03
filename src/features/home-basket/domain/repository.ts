@@ -47,6 +47,7 @@ export interface CreateReminderInput {
 
 export interface HomeBasketRepository {
   subscribe(householdId: string, listener: (snapshot: HomeBasketSnapshot) => void): () => void;
+  updateCurrencyCode(householdId: string, currencyCode: string): Promise<void>;
   updateBudgetCycleAnchorDay(householdId: string, budgetCycleAnchorDay: number): Promise<void>;
   updateMonthlyBudget(householdId: string, monthlyBudgetCents: number): Promise<void>;
   addItem(householdId: string, input: AddItemInput): Promise<void>;

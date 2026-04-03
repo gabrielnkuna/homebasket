@@ -141,7 +141,7 @@ export default function TripsScreen() {
         </View>
 
         <View style={styles.formGrid}>
-          <View style={styles.fieldBlock}>
+          <View style={styles.gridFieldBlock}>
             <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Store or seller</Text>
             <TextInput
               value={tripDraft.store}
@@ -158,7 +158,7 @@ export default function TripsScreen() {
               ]}
             />
           </View>
-          <View style={styles.fieldBlock}>
+          <View style={styles.gridFieldBlock}>
             <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Total spend</Text>
             <TextInput
               value={tripDraft.totalSpend}
@@ -369,7 +369,7 @@ export default function TripsScreen() {
                     },
                   ]}>
                   <View style={styles.formGrid}>
-                    <View style={styles.fieldBlock}>
+                    <View style={styles.gridFieldBlock}>
                       <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Item name</Text>
                       <TextInput
                         value={item.name}
@@ -390,7 +390,7 @@ export default function TripsScreen() {
                         ]}
                       />
                     </View>
-                    <View style={styles.fieldBlock}>
+                    <View style={styles.gridFieldBlock}>
                       <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Quantity</Text>
                       <TextInput
                         value={item.quantity}
@@ -411,7 +411,7 @@ export default function TripsScreen() {
                         ]}
                       />
                     </View>
-                    <View style={styles.fieldBlock}>
+                    <View style={styles.gridFieldBlock}>
                       <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Category</Text>
                       <TextInput
                         value={item.category}
@@ -584,6 +584,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   fieldBlock: {
+    gap: Spacing.two,
+  },
+  gridFieldBlock: {
     flexBasis: 220,
     flexGrow: 1,
     gap: Spacing.two,

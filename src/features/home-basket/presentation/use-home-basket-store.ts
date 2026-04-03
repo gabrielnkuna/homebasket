@@ -45,6 +45,10 @@ import {
   parseCurrencyInput,
 } from '@/shared/format/currency';
 import {
+  getDefaultCurrencyCode,
+  normalizeCurrencyCode,
+} from '@/shared/locale/currency-preferences';
+import {
   analyzeReceiptImage,
   canAnalyzeReceipts,
 } from '../infrastructure/receipt-analysis';
@@ -83,13 +87,16 @@ const defaultTripDraft = {
   purchasedItemsDraft: [] as ReceiptAnalysisItem[],
 };
 
-const defaultCreateHouseholdDraft = {
-  householdName: '',
-  memberName: '',
-  primaryStore: '',
-  monthlyBudget: '',
-  budgetCycleAnchorDay: '25',
-};
+function createDefaultCreateHouseholdDraft() {
+  return {
+    householdName: '',
+    memberName: '',
+    currencyCode: getDefaultCurrencyCode(),
+    primaryStore: '',
+    monthlyBudget: '',
+    budgetCycleAnchorDay: '25',
+  };
+}
 
 const defaultJoinHouseholdDraft = {
   inviteCode: demoInviteCode ?? '',
@@ -127,7 +134,7 @@ let unsubscribe: (() => void) | null = null;
 type AddItemDraft = typeof defaultAddItemDraft;
 type ItemEditDraft = typeof defaultItemEditDraft;
 type TripDraft = typeof defaultTripDraft;
-type CreateHouseholdDraft = typeof defaultCreateHouseholdDraft;
+type CreateHouseholdDraft = ReturnType<typeof createDefaultCreateHouseholdDraft>;
 type JoinHouseholdDraft = typeof defaultJoinHouseholdDraft;
 type SignInDraft = typeof defaultSignInDraft;
 type LinkAccountDraft = typeof defaultLinkAccountDraft;
@@ -181,6 +188,7 @@ type HomeBasketStore = {
   updateSignInDraft: (patch: Partial<SignInDraft>) => void;
   updateLinkAccountDraft: (patch: Partial<LinkAccountDraft>) => void;
   updateReminderDraft: (patch: Partial<ReminderDraft>) => void;
+  saveCurrencyCode: (currencyCodeInput: string) => Promise<void>;
   saveBudgetCycleAnchorDay: (anchorDayInput: string) => Promise<void>;
   saveMonthlyBudget: (budgetInput: string) => Promise<void>;
   createHousehold: () => Promise<void>;
@@ -342,7 +350,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
   addItemDraft: defaultAddItemDraft,
   itemEditDraft: defaultItemEditDraft,
   tripDraft: defaultTripDraft,
-  createHouseholdDraft: defaultCreateHouseholdDraft,
+  createHouseholdDraft: createDefaultCreateHouseholdDraft(),
   joinHouseholdDraft: defaultJoinHouseholdDraft,
   signInDraft: defaultSignInDraft,
   linkAccountDraft: defaultLinkAccountDraft,
@@ -581,20 +589,70 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
       notice: null,
     }));
   },
+  async saveCurrencyCode(currencyCodeInput) {
+    const state = get();
+    const snapshot = state.snapshot;
+
+    if (!snapshot || !state.session) {
+      return;
+    }
+
+    if (state.session.memberRole !== 'Owner') {
+      set({
+        error: 'Only the household owner can change the currency.',
+        notice: null,
+      });
+      return;
+    }
+
+    let currencyCode: string;
+
+    try {
+      currencyCode = normalizeCurrencyCode(currencyCodeInput);
+    } catch (error) {
+      set({
+        error:
+          error instanceof Error ? error.message : 'Choose a valid household currency.',
+        notice: null,
+      });
+      return;
+    }
+
+    try {
+      set({ isSaving: true, error: null, notice: null });
+      await homeBasketRepository.updateCurrencyCode(snapshot.household.id, currencyCode);
+      set({
+        isSaving: false,
+        error: null,
+        notice: `Household currency set to ${currencyCode}.`,
+      });
+    } catch (error) {
+      set({
+        isSaving: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unable to update the household currency right now.',
+        notice: null,
+      });
+    }
+  },
   async createHousehold() {
     const state = get();
     const monthlyBudgetCents =
       parseCurrencyInput(state.createHouseholdDraft.monthlyBudget) ?? 0;
     let budgetCycleAnchorDay: number;
+    let currencyCode: string;
 
     try {
       budgetCycleAnchorDay = normalizeBudgetCycleAnchorDay(
         Number(state.createHouseholdDraft.budgetCycleAnchorDay)
       );
+      currencyCode = normalizeCurrencyCode(state.createHouseholdDraft.currencyCode);
     } catch (error) {
       set({
         error:
-          error instanceof Error ? error.message : 'Enter a pay day between 1 and 31.',
+          error instanceof Error ? error.message : 'Check the pay day and currency.',
         notice: null,
       });
       return;
@@ -606,6 +664,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
       const result = await accessRepository.createHousehold({
         householdName: state.createHouseholdDraft.householdName,
         memberName: state.createHouseholdDraft.memberName,
+        currencyCode,
         primaryStore: state.createHouseholdDraft.primaryStore,
         monthlyBudgetCents,
         budgetCycleAnchorDay,
@@ -616,7 +675,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
       set({
         authSession,
         invite: result.invite,
-        createHouseholdDraft: defaultCreateHouseholdDraft,
+        createHouseholdDraft: createDefaultCreateHouseholdDraft(),
         joinHouseholdDraft: {
           ...defaultJoinHouseholdDraft,
           memberName: result.session.memberName,
@@ -1233,7 +1292,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
       notice: null,
       onboardingMode: get().demoInviteCode ? 'join' : 'create',
       joinHouseholdDraft: defaultJoinHouseholdDraft,
-      createHouseholdDraft: defaultCreateHouseholdDraft,
+      createHouseholdDraft: createDefaultCreateHouseholdDraft(),
       signInDraft: defaultSignInDraft,
       linkAccountDraft: defaultLinkAccountDraft,
     });
