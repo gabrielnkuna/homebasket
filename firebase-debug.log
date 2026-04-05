@@ -1,0 +1,21 @@
+[debug] [2026-04-05T09:27:30.397Z] ----------------------------------------------------------------------
+[debug] [2026-04-05T09:27:30.400Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\gabri\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-04-05T09:27:30.400Z] CLI Version:   15.13.0
+[debug] [2026-04-05T09:27:30.400Z] Platform:      win32
+[debug] [2026-04-05T09:27:30.400Z] Node Version:  v24.11.0
+[debug] [2026-04-05T09:27:30.400Z] Time:          Sun Apr 05 2026 11:27:30 GMT+0200 (South Africa Standard Time)
+[debug] [2026-04-05T09:27:30.400Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-04-05T09:27:34.433Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-05T09:27:34.434Z] > authorizing via signed-in user (gabriel.nkuna@gmail.com)
+[debug] [2026-04-05T09:27:34.434Z] [iam] checking project home-basket-app for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-04-05T09:27:34.435Z] Checked if tokens are valid: false, expires at: 1775381973904
+[debug] [2026-04-05T09:27:34.435Z] Checked if tokens are valid: false, expires at: 1775381973904
+[debug] [2026-04-05T09:27:34.435Z] > refreshing access token with scopes: []
+[debug] [2026-04-05T09:27:34.437Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-05T09:27:34.437Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-05T09:27:34.865Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-04-05T09:27:34.865Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-05T09:27:34.875Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/home-basket-app:testIamPermissions [none]
+[debug] [2026-04-05T09:27:34.875Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/home-basket-app:testIamPermissions  x-goog-user-project=home-basket-app
+[debug] [2026-04-05T09:27:34.875Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/home-basket-app:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}

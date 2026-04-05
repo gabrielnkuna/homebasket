@@ -5,6 +5,7 @@ import { Fonts } from '@/constants/theme';
 import { HOME_BASKET_SUPPORT_EMAIL } from '@/shared/config/app-links';
 import { BrandHero, ScreenShell, SectionCard } from '@/shared/ui';
 import { useTheme } from '@/hooks/use-theme';
+import { PublicPageNav } from '../components/public-page-nav';
 
 export default function PrivacyScreen() {
   const theme = useTheme();
@@ -15,6 +16,7 @@ export default function PrivacyScreen() {
       title="Privacy Policy"
       headerArt={<BrandHero width={180} />}
       subtitle="How Home Basket handles household data, accounts, receipts, and shared shopping records.">
+      <PublicPageNav active="privacy" />
       <SectionCard title="Effective date" description="April 5, 2026">
         <Text style={[styles.body, { color: theme.textMuted }]}>
           Home Basket is published by Transcripe.
@@ -79,4 +81,3 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 });
-

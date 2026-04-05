@@ -6,6 +6,7 @@ import { Fonts, Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { HOME_BASKET_SUPPORT_EMAIL } from '@/shared/config/app-links';
 import { BrandHero, ScreenShell, SectionCard } from '@/shared/ui';
+import { PublicPageNav } from '../components/public-page-nav';
 
 export default function AndroidDownloadScreen() {
   const theme = useTheme();
@@ -16,6 +17,7 @@ export default function AndroidDownloadScreen() {
       title="Get Home Basket on Android"
       headerArt={<BrandHero width={180} />}
       subtitle="The Google Play listing is being prepared. This page is the public Android download home until store release.">
+      <PublicPageNav active="android" />
       <SectionCard title="Android app status" description="Google Play release coming soon">
         <Text style={[styles.body, { color: theme.textMuted }]}>
           Home Basket is already running on Android preview builds and is being prepared for Google
@@ -78,4 +80,3 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
-

@@ -6,6 +6,7 @@ import { Fonts, Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { HOME_BASKET_SUPPORT_EMAIL } from '@/shared/config/app-links';
 import { BrandHero, ScreenShell, SectionCard } from '@/shared/ui';
+import { PublicPageNav } from '../components/public-page-nav';
 
 export default function IosDownloadScreen() {
   const theme = useTheme();
@@ -16,6 +17,7 @@ export default function IosDownloadScreen() {
       title="Get Home Basket on iPhone"
       headerArt={<BrandHero width={180} />}
       subtitle="The App Store listing is being prepared. This page is the public iPhone download home until store release.">
+      <PublicPageNav active="ios" />
       <SectionCard title="iPhone app status" description="App Store release coming soon">
         <Text style={[styles.body, { color: theme.textMuted }]}>
           Home Basket is already opening on registered iPhones through preview distribution and is
@@ -78,4 +80,3 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
-

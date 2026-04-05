@@ -8,6 +8,7 @@ import {
 } from '@/shared/config/app-links';
 import { BrandHero, ScreenShell, SectionCard } from '@/shared/ui';
 import { useTheme } from '@/hooks/use-theme';
+import { PublicPageNav } from '../components/public-page-nav';
 
 export default function TermsScreen() {
   const theme = useTheme();
@@ -18,6 +19,7 @@ export default function TermsScreen() {
       title="Terms of Use"
       headerArt={<BrandHero width={180} />}
       subtitle="A clear summary of how Home Basket may be used and what the service does and does not guarantee.">
+      <PublicPageNav active="terms" />
       <SectionCard title="Effective date" description="April 5, 2026">
         <Text style={[styles.body, { color: theme.textMuted }]}>
           These Terms of Use govern your use of Home Basket, provided by Transcripe.
@@ -75,4 +77,3 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 });
-
