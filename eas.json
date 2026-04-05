@@ -8,6 +8,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
+        "EXPO_PUBLIC_ADS_ENABLED": "true",
+        "EXPO_PUBLIC_ADMOB_USE_TEST_IDS": "true",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyD7lsckbBD1nJdMv7zXFTD8nK88D2B6bEs",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "household-manager-apps.firebaseapp.com",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "household-manager-apps",
@@ -20,6 +22,8 @@
     "preview": {
       "distribution": "internal",
       "env": {
+        "EXPO_PUBLIC_ADS_ENABLED": "true",
+        "EXPO_PUBLIC_ADMOB_USE_TEST_IDS": "true",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyD7lsckbBD1nJdMv7zXFTD8nK88D2B6bEs",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "household-manager-apps.firebaseapp.com",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "household-manager-apps",
@@ -34,6 +38,8 @@
     },
     "production": {
       "env": {
+        "EXPO_PUBLIC_ADS_ENABLED": "true",
+        "EXPO_PUBLIC_ADMOB_USE_TEST_IDS": "false",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyD7lsckbBD1nJdMv7zXFTD8nK88D2B6bEs",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "household-manager-apps.firebaseapp.com",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "household-manager-apps",

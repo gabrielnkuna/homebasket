@@ -30,6 +30,8 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 firebase-debug.log
+.firebase/
+tmp_store_assets/
 
 # macOS
 .DS_Store

@@ -24,6 +24,7 @@ import {
   ScreenShell,
   SectionCard,
 } from '@/shared/ui';
+import { showInterstitialAdIfReady } from '@/shared/ads';
 
 export default function TripsScreen() {
   const theme = useTheme();
@@ -48,6 +49,18 @@ export default function TripsScreen() {
   const isAnalyzingReceipt = useHomeBasketStore((state) => state.isAnalyzingReceipt);
   const error = useHomeBasketStore((state) => state.error);
   const notice = useHomeBasketStore((state) => state.notice);
+  const handleCompleteTrip = React.useCallback(async () => {
+    await completeTrip();
+
+    const latestState = useHomeBasketStore.getState();
+
+    if (
+      !latestState.error &&
+      latestState.notice === 'Purchase recorded and the bought items moved into history.'
+    ) {
+      await showInterstitialAdIfReady();
+    }
+  }, [completeTrip]);
 
   if (!snapshot) {
     return (
@@ -460,7 +473,7 @@ export default function TripsScreen() {
 
         <ActionButton
           label={`Record purchase as ${selectedMember.name}`}
-          onPress={() => void completeTrip()}
+          onPress={() => void handleCompleteTrip()}
           disabled={isSaving || isAnalyzingReceipt}
         />
       </SectionCard>

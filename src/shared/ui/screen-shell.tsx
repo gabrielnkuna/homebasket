@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fonts, MaxContentWidth, Radii, Shadows, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { MobileBannerAd } from '@/shared/ads';
 import { WebFooter } from './web-footer';
 
 const swipeRoutes = ['/', '/purchases', '/household'] as const;
@@ -61,17 +62,19 @@ export function ScreenShell({
   const canSwipeNavigate =
     swipeNavigationEnabled && Platform.OS !== 'web' && activeSwipeIndex !== -1;
 
+  const nativeGesture = React.useMemo(() => Gesture.Native(), []);
   const swipeGesture = React.useMemo(
     () =>
       Gesture.Pan()
         .enabled(canSwipeNavigate)
         .runOnJS(true)
-        .activeOffsetX([-24, 24])
-        .failOffsetY([-18, 18])
+        .simultaneousWithExternalGesture(nativeGesture)
+        .activeOffsetX([-16, 16])
+        .failOffsetY([-64, 64])
         .onEnd((event) => {
           if (
             !canSwipeNavigate ||
-            Math.abs(event.translationX) < 72 ||
+            Math.abs(event.translationX) < 56 ||
             Math.abs(event.translationX) < Math.abs(event.translationY) * 1.2
           ) {
             return;
@@ -84,7 +87,7 @@ export function ScreenShell({
             router.replace(nextRoute);
           }
         }),
-    [activeSwipeIndex, canSwipeNavigate, pathname, router]
+    [activeSwipeIndex, canSwipeNavigate, nativeGesture, pathname, router]
   );
 
   const content = (
@@ -138,6 +141,8 @@ export function ScreenShell({
           </View>
         </View>
 
+        {swipeNavigationEnabled ? <MobileBannerAd /> : null}
+
         <View style={styles.sectionStack}>{children}</View>
         <WebFooter />
       </View>
@@ -148,7 +153,13 @@ export function ScreenShell({
     <KeyboardAvoidingView
       style={[styles.keyboardRoot, { backgroundColor: theme.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {canSwipeNavigate ? <GestureDetector gesture={swipeGesture}>{content}</GestureDetector> : content}
+      {canSwipeNavigate ? (
+        <GestureDetector gesture={Gesture.Simultaneous(nativeGesture, swipeGesture)}>
+          {content}
+        </GestureDetector>
+      ) : (
+        content
+      )}
     </KeyboardAvoidingView>
   );
 }

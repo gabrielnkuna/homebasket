@@ -1259,13 +1259,16 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
 
     try {
       set({ isSaving: true, error: null, notice: null });
+      const hadInvite = !!state.invite;
       const invite = await accessRepository.createInvite(
         state.session.householdId,
         state.selectedMemberId ?? state.session.memberId
       );
       set({
         invite,
-        notice: null,
+        notice: hadInvite
+          ? 'Invite code changed. Share the new code and ignore any older one.'
+          : 'Invite code ready to share.',
         isSaving: false,
       });
     } catch (error) {

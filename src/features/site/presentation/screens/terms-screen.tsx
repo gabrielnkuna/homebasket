@@ -51,6 +51,14 @@ export default function TermsScreen() {
         </Text>
       </SectionCard>
 
+      <SectionCard title="Sponsored placements">
+        <Text style={[styles.body, { color: theme.textMuted }]}>
+          Supported mobile builds of Home Basket may include sponsored placements or advertisements.
+          Those sponsored messages may link to third-party products or services governed by their
+          own terms and privacy policies.
+        </Text>
+      </SectionCard>
+
       <SectionCard title="Availability and liability">
         <Text style={[styles.body, { color: theme.textMuted }]}>
           We may change, suspend, or discontinue parts of the service at any time, and we do not

@@ -60,6 +60,7 @@ npm run typecheck
 - [Play Store creative brief](./docs/play-store-creative-brief.md)
 - [Play Store screenshot runbook](./docs/play-store-screenshot-runbook.md)
 - [Mobile deployment scripts](./docs/mobile-deployment-scripts.md)
+- [Mobile ads setup](./docs/mobile-ads-setup.md)
 - [MVP launch pack](./docs/mvp-launch-pack.md)
 - [Privacy policy draft](./docs/privacy-policy.md)
 - [Store listing copy](./docs/store-listing-copy.md)
@@ -78,6 +79,8 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 EXPO_PUBLIC_FIREBASE_APP_ID=
+EXPO_PUBLIC_ADS_ENABLED=true
+EXPO_PUBLIC_ADMOB_USE_TEST_IDS=true
 ```
 
 Without those variables, Home Basket runs in demo mode with seeded household data.

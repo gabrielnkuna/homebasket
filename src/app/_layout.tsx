@@ -19,6 +19,7 @@ import DeleteAccountScreen from '@/features/site/presentation/screens/delete-acc
 import { BrandHero, ScreenShell, SectionCard } from '@/shared/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { HOME_BASKET_ROUTES } from '@/shared/config/app-links';
+import { initializeAdsAsync } from '@/shared/ads';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -54,6 +55,14 @@ export default function RootLayout() {
     document.documentElement.style.colorScheme = themeMode;
     document.body.style.backgroundColor = palette.background;
   }, [themeMode]);
+
+  useEffect(() => {
+    if (isPublicInfoRoute) {
+      return;
+    }
+
+    void initializeAdsAsync();
+  }, [isPublicInfoRoute]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

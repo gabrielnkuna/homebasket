@@ -15,7 +15,7 @@ export default function PrivacyScreen() {
       eyebrow="Privacy"
       title="Privacy Policy"
       headerArt={<BrandHero width={180} />}
-      subtitle="How Home Basket handles household data, accounts, receipts, and shared shopping records.">
+      subtitle="How Home Basket handles household data, accounts, receipts, shared shopping records, and limited sponsored messages on mobile.">
       <PublicPageNav active="privacy" />
       <SectionCard title="Effective date" description="April 5, 2026">
         <Text style={[styles.body, { color: theme.textMuted }]}>
@@ -27,7 +27,9 @@ export default function PrivacyScreen() {
         <Text style={[styles.body, { color: theme.textMuted }]}>
           Home Basket may store account email addresses, Firebase authentication identifiers,
           household names, member names, invite codes, shopping items, reminders, purchase totals,
-          notes, purchase history, receipt images, and related receipt metadata.
+          notes, purchase history, receipt images, related receipt metadata, and if mobile ads are
+          enabled, advertising consent signals, approximate region for consent handling, and basic
+          ad interaction diagnostics.
         </Text>
       </SectionCard>
 
@@ -42,9 +44,21 @@ export default function PrivacyScreen() {
       <SectionCard title="Infrastructure and sharing">
         <Text style={[styles.body, { color: theme.textMuted }]}>
           Home Basket uses Firebase services, including Firebase Authentication, Cloud Firestore,
-          and Cloud Storage. Data may be processed by Google and its service providers. Household
-          data is also shared with other members of the same household because that is part of the
-          shared-list experience.
+          and Cloud Storage. If mobile ads are enabled, Home Basket also uses Google AdMob and
+          Google User Messaging Platform tooling to request consent and serve sponsored messages.
+          Data may be processed by Google and its service providers. Household data is also shared
+          with other members of the same household because that is part of the shared-list
+          experience.
+        </Text>
+      </SectionCard>
+
+      <SectionCard title="Ads and consent">
+        <Text style={[styles.body, { color: theme.textMuted }]}>
+          On supported Android and iPhone builds, Home Basket may show banner ads or occasional
+          full-screen sponsored messages. These ads are intended to be relevant to shopping and
+          household services, but they are provided by Google advertising systems and demand
+          partners. Where required by law, Home Basket requests advertising consent and provides an
+          in-app way to review ad choices again later.
         </Text>
       </SectionCard>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linking, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Fonts, Radii, Spacing } from '@/constants/theme';
 import {
@@ -17,6 +17,7 @@ import {
 } from '@/shared/locale/currency-preferences';
 import {
   getHomeBasketAbsoluteUrl,
+  HOME_BASKET_WEBSITE,
   HOME_BASKET_ROUTES,
 } from '@/shared/config/app-links';
 import {
@@ -29,6 +30,7 @@ import {
   ScreenShell,
   SectionCard,
 } from '@/shared/ui';
+import { openAdsPrivacyOptions, supportsAdsPrivacyOptions } from '@/shared/ads';
 
 export default function HouseholdScreen() {
   const theme = useTheme();
@@ -71,6 +73,16 @@ export default function HouseholdScreen() {
       ? formatCurrencyInputValue(snapshot.household.monthlyBudgetCents)
       : ''
   );
+  const [isOpeningAdChoices, setIsOpeningAdChoices] = React.useState(false);
+  const handleOpenAdChoices = React.useCallback(async () => {
+    setIsOpeningAdChoices(true);
+
+    try {
+      await openAdsPrivacyOptions();
+    } finally {
+      setIsOpeningAdChoices(false);
+    }
+  }, []);
 
   React.useEffect(() => {
     setBudgetCycleAnchorDayInput(String(budgetCycleAnchorDay));
@@ -105,9 +117,13 @@ export default function HouseholdScreen() {
 
   const model = buildHouseholdScreenModel(snapshot);
   const hasBudget = snapshot.household.monthlyBudgetCents > 0;
+  const adsPrivacyOptionsAvailable = supportsAdsPrivacyOptions();
   const suggestedCurrencyCodes = getSuggestedCurrencyCodes(
     currencyCodeInput || snapshot.household.currencyCode
   );
+  const inviteShareMessage = invite
+    ? `Join my Home Basket household "${snapshot.household.name}" with invite code ${invite.code}. Open Home Basket, choose Join household, and enter that code. ${HOME_BASKET_WEBSITE}`
+    : null;
   const currencyHelperText =
     session?.memberRole === 'Owner'
       ? detectedCurrencyCode
@@ -136,7 +152,7 @@ export default function HouseholdScreen() {
               borderColor: theme.border,
             },
           ]}>
-          <Text style={[styles.inviteCode, { color: theme.text }]}>
+          <Text selectable style={[styles.inviteCode, { color: theme.text }]}>
             {invite?.code ?? 'No invite generated yet'}
           </Text>
           <Text style={[styles.inviteCopy, { color: theme.textMuted }]}>
@@ -147,8 +163,22 @@ export default function HouseholdScreen() {
         </View>
 
         <View style={styles.actionRow}>
+          {inviteShareMessage ? (
+            <ActionButton
+              label="Share invite"
+              tone="secondary"
+              onPress={() =>
+                void Share.share({
+                  message: inviteShareMessage,
+                  url: HOME_BASKET_WEBSITE,
+                  title: `Join ${snapshot.household.name}`,
+                })
+              }
+              disabled={isSaving}
+            />
+          ) : null}
           <ActionButton
-            label={invite ? 'Create fresh invite' : 'Generate invite'}
+            label={invite ? 'Change invite code' : 'Generate invite'}
             onPress={() => void createInvite()}
             disabled={isSaving}
           />
@@ -386,6 +416,24 @@ export default function HouseholdScreen() {
           ))
         )}
       </SectionCard>
+
+      {adsPrivacyOptionsAvailable ? (
+        <SectionCard
+          title="Sponsored offers"
+          description="Home Basket may show occasional sponsored messages from stores, banks, or household services that fit shopping moments on this device.">
+          <Text style={[styles.supportText, { color: theme.textMuted }]}>
+            You can review advertising privacy choices for this device whenever needed.
+          </Text>
+          <View style={styles.actionRow}>
+            <ActionButton
+              label="Review ad choices"
+              tone="secondary"
+              onPress={() => void handleOpenAdChoices()}
+              disabled={isSaving || isOpeningAdChoices}
+            />
+          </View>
+        </SectionCard>
+      ) : null}
 
       <SectionCard
         title="Acting member"
