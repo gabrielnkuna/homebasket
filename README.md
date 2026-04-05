@@ -59,6 +59,7 @@ npm run typecheck
 - [Play Store assets checklist](./docs/play-store-assets-checklist.md)
 - [Play Store creative brief](./docs/play-store-creative-brief.md)
 - [Play Store screenshot runbook](./docs/play-store-screenshot-runbook.md)
+- [Mobile deployment scripts](./docs/mobile-deployment-scripts.md)
 - [MVP launch pack](./docs/mvp-launch-pack.md)
 - [Privacy policy draft](./docs/privacy-policy.md)
 - [Store listing copy](./docs/store-listing-copy.md)
