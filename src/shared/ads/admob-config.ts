@@ -28,6 +28,10 @@ export function shouldUseTestAdUnits() {
   return process.env.EXPO_PUBLIC_ADMOB_USE_TEST_IDS === 'true';
 }
 
+export function getAdsLaunchThreshold() {
+  return shouldUseTestAdUnits() ? 3 : 10;
+}
+
 export function supportsMobileAdsOnThisDevice() {
   return areMobileAdsEnabled() && Platform.OS !== 'web' && !isExpoGo();
 }

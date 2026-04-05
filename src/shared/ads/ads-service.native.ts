@@ -1,7 +1,14 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform, StatusBar } from 'react-native';
 
-import { getInterstitialAdUnitId, supportsMobileAdsOnThisDevice } from './admob-config';
+import {
+  getAdsLaunchThreshold,
+  getInterstitialAdUnitId,
+  supportsMobileAdsOnThisDevice,
+} from './admob-config';
 import type { AdsRuntimeState } from './ads-types';
+
+const ADS_LAUNCH_COUNT_STORAGE_KEY = 'home-basket:ads-launch-count';
 
 let adsState: AdsRuntimeState = {
   enabled: supportsMobileAdsOnThisDevice(),
@@ -17,6 +24,29 @@ let interstitial: any | null = null;
 let interstitialLoaded = false;
 let interstitialLoading = false;
 let lastInterstitialAt = 0;
+let launchCountForSession: number | null = null;
+
+async function getRecordedLaunchCount() {
+  if (launchCountForSession !== null) {
+    return launchCountForSession;
+  }
+
+  const rawValue = await AsyncStorage.getItem(ADS_LAUNCH_COUNT_STORAGE_KEY);
+  const parsedValue = rawValue ? Number.parseInt(rawValue, 10) : 0;
+
+  launchCountForSession = Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 0;
+  return launchCountForSession;
+}
+
+async function recordAppLaunchForAds() {
+  const currentCount = await getRecordedLaunchCount();
+  const nextCount = currentCount + 1;
+
+  launchCountForSession = nextCount;
+  await AsyncStorage.setItem(ADS_LAUNCH_COUNT_STORAGE_KEY, String(nextCount));
+
+  return nextCount;
+}
 
 function loadGoogleMobileAdsModule() {
   if (!googleMobileAdsModulePromise) {
@@ -103,12 +133,19 @@ export async function initializeAdsAsync(): Promise<AdsRuntimeState> {
 
   initializePromise = (async () => {
     try {
+      const launchCount = await recordAppLaunchForAds();
+      const launchThreshold = getAdsLaunchThreshold();
+
       adsState = {
         enabled: true,
-        initialized: false,
+        initialized: launchCount < launchThreshold,
         available: false,
         privacyOptionsRequired: false,
       };
+
+      if (launchCount < launchThreshold) {
+        return adsState;
+      }
 
       const googleMobileAds = await loadGoogleMobileAdsModule();
       const consentInfo = await googleMobileAds.AdsConsent.gatherConsent();

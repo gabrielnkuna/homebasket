@@ -9,16 +9,12 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { usePathname, useRouter } from 'expo-router';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fonts, MaxContentWidth, Radii, Shadows, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { MobileBannerAd } from '@/shared/ads';
 import { WebFooter } from './web-footer';
-
-const swipeRoutes = ['/', '/purchases', '/household'] as const;
 
 type ScreenShellProps = {
   title: string;
@@ -45,8 +41,6 @@ export function ScreenShell({
 }: ScreenShellProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const pathname = usePathname();
-  const router = useRouter();
 
   const topPadding = Platform.select({
     web: Spacing.seven,
@@ -57,38 +51,6 @@ export function ScreenShell({
     web: Spacing.seven,
     default: insets.bottom + Spacing.six,
   });
-
-  const activeSwipeIndex = (swipeRoutes as readonly string[]).indexOf(pathname);
-  const canSwipeNavigate =
-    swipeNavigationEnabled && Platform.OS !== 'web' && activeSwipeIndex !== -1;
-
-  const nativeGesture = React.useMemo(() => Gesture.Native(), []);
-  const swipeGesture = React.useMemo(
-    () =>
-      Gesture.Pan()
-        .enabled(canSwipeNavigate)
-        .runOnJS(true)
-        .simultaneousWithExternalGesture(nativeGesture)
-        .activeOffsetX([-16, 16])
-        .failOffsetY([-64, 64])
-        .onEnd((event) => {
-          if (
-            !canSwipeNavigate ||
-            Math.abs(event.translationX) < 56 ||
-            Math.abs(event.translationX) < Math.abs(event.translationY) * 1.2
-          ) {
-            return;
-          }
-
-          const direction = event.translationX < 0 ? 1 : -1;
-          const nextRoute = swipeRoutes[activeSwipeIndex + direction];
-
-          if (nextRoute && nextRoute !== pathname) {
-            router.replace(nextRoute);
-          }
-        }),
-    [activeSwipeIndex, canSwipeNavigate, nativeGesture, pathname, router]
-  );
 
   const content = (
     <ScrollView
@@ -153,13 +115,7 @@ export function ScreenShell({
     <KeyboardAvoidingView
       style={[styles.keyboardRoot, { backgroundColor: theme.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {canSwipeNavigate ? (
-        <GestureDetector gesture={Gesture.Simultaneous(nativeGesture, swipeGesture)}>
-          {content}
-        </GestureDetector>
-      ) : (
-        content
-      )}
+      {content}
     </KeyboardAvoidingView>
   );
 }
