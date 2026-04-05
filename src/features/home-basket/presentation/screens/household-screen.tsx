@@ -115,9 +115,9 @@ export default function HouseholdScreen() {
     <ScreenShell
       eyebrow="Household"
       title="Who is shopping this week?"
+      swipeNavigationEnabled
       headerAccessory={<BrandBadge />}
-      subtitle="Keep the shared list simple: everyone can add items, one shopper closes the trip, and the household always sees the current state."
-      badge={syncMode === 'firestore' ? 'Realtime Firestore + auth' : 'Demo repository'}>
+      subtitle="Keep the shared list simple: everyone can add items, one shopper closes the trip, and the household always sees the current state.">
       {error ? <MessageBanner message={error} tone="error" /> : null}
       {!error && notice ? <MessageBanner message={notice} /> : null}
 

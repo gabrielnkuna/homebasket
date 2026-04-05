@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
+  PanResponder,
   Platform,
   ScrollView,
   StyleProp,
@@ -9,10 +10,13 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fonts, MaxContentWidth, Radii, Shadows, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+
+const swipeRoutes = ['/', '/purchases', '/household'] as const;
 
 type ScreenShellProps = {
   title: string;
@@ -23,6 +27,7 @@ type ScreenShellProps = {
   headerArt?: ReactNode;
   headerAccessory?: ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
+  swipeNavigationEnabled?: boolean;
 };
 
 export function ScreenShell({
@@ -34,9 +39,12 @@ export function ScreenShell({
   headerArt,
   headerAccessory,
   contentStyle,
+  swipeNavigationEnabled = false,
 }: ScreenShellProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  const router = useRouter();
 
   const topPadding = Platform.select({
     web: Spacing.seven,
@@ -48,11 +56,39 @@ export function ScreenShell({
     default: insets.bottom + Spacing.six,
   });
 
+  const activeSwipeIndex = (swipeRoutes as readonly string[]).indexOf(pathname);
+  const canSwipeNavigate =
+    swipeNavigationEnabled && Platform.OS !== 'web' && activeSwipeIndex !== -1;
+
+  const panResponder = React.useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) =>
+          canSwipeNavigate &&
+          Math.abs(gestureState.dx) > 24 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2,
+        onPanResponderRelease: (_, gestureState) => {
+          if (!canSwipeNavigate || Math.abs(gestureState.dx) < 72) {
+            return;
+          }
+
+          const direction = gestureState.dx < 0 ? 1 : -1;
+          const nextRoute = swipeRoutes[activeSwipeIndex + direction];
+
+          if (nextRoute) {
+            router.replace(nextRoute);
+          }
+        },
+      }),
+    [activeSwipeIndex, canSwipeNavigate, router]
+  );
+
   return (
     <KeyboardAvoidingView
       style={[styles.keyboardRoot, { backgroundColor: theme.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
+        {...(canSwipeNavigate ? panResponder.panHandlers : {})}
         style={styles.scroll}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
@@ -85,22 +121,22 @@ export function ScreenShell({
               </View>
 
               <View style={styles.headerMeta}>
-                {badge ? (
-                  <View
-                    style={[
-                      styles.badge,
+              {badge ? (
+                <View
+                  style={[
+                    styles.badge,
                       {
                         backgroundColor: theme.primarySoft,
                         borderColor: theme.border,
                       },
-                    ]}>
-                    <Text style={[styles.badgeText, { color: theme.primaryStrong }]}>{badge}</Text>
-                  </View>
-                ) : null}
-                {headerAccessory}
-              </View>
+                  ]}>
+                  <Text style={[styles.badgeText, { color: theme.primaryStrong }]}>{badge}</Text>
+                </View>
+              ) : null}
+              {headerAccessory ? <View style={styles.headerAccessory}>{headerAccessory}</View> : null}
             </View>
           </View>
+        </View>
 
           <View style={styles.sectionStack}>{children}</View>
         </View>
@@ -159,10 +195,13 @@ const styles = StyleSheet.create({
   },
   headerMeta: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: Spacing.three,
+  },
+  headerAccessory: {
+    marginLeft: 'auto',
   },
   badge: {
     paddingHorizontal: Spacing.three,

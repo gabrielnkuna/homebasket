@@ -96,6 +96,7 @@ export default function TripsScreen() {
     <ScreenShell
       eyebrow="Purchases"
       title="Record a purchase"
+      swipeNavigationEnabled
       headerAccessory={<BrandBadge />}
       subtitle="Record what was bought once the order or checkout is done. Bought items move into history, and you can also log ad hoc purchases with a receipt even when nothing was pre-added to the list.">
       <View style={styles.metricGrid}>

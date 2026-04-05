@@ -494,6 +494,7 @@ export default function HomeScreen() {
     <ScreenShell
       eyebrow="Shared household list"
       title={snapshot.household.name}
+      swipeNavigationEnabled
       headerAccessory={<BrandBadge />}
       subtitle="Add items quickly, mark them as bought while you shop, and move completed items into purchase history only when the basket is closed.">
       <View style={styles.metricGrid}>
