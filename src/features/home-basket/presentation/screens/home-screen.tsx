@@ -207,7 +207,7 @@ export default function HomeScreen() {
   const model = buildHomeScreenModel(snapshot, filter, selectedMemberId);
   const selectedMember = model.selectedMember;
   const hasBudget = snapshot.household.monthlyBudgetCents > 0;
-  const hasActiveBasketItems = model.groupedItems.length > 0;
+  const hasBasketItems = snapshot.items.length > 0;
 
   const activeBasketSection = (
     <SectionCard
@@ -627,8 +627,8 @@ export default function HomeScreen() {
         </SectionCard>
       ) : null}
 
-      {hasActiveBasketItems ? activeBasketSection : addItemSection}
-      {hasActiveBasketItems ? addItemSection : activeBasketSection}
+      {hasBasketItems ? activeBasketSection : addItemSection}
+      {hasBasketItems ? addItemSection : activeBasketSection}
     </ScreenShell>
   );
 }
