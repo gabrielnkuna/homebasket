@@ -1,12 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts, MaxContentWidth, Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   HOME_BASKET_ROUTES,
-  HOME_BASKET_SUPPORT_EMAIL,
 } from '@/shared/config/app-links';
 
 export function WebFooter() {
@@ -44,9 +43,15 @@ export function WebFooter() {
         </Pressable>
         <Pressable
           accessibilityRole="link"
-          onPress={() => void Linking.openURL(`mailto:${HOME_BASKET_SUPPORT_EMAIL}`)}
+          onPress={() => openWebPath(HOME_BASKET_ROUTES.support)}
           style={styles.footerLink}>
           <Text style={[styles.footerLinkText, { color: theme.textMuted }]}>Support</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="link"
+          onPress={() => openWebPath(HOME_BASKET_ROUTES.deleteAccount)}
+          style={styles.footerLink}>
+          <Text style={[styles.footerLinkText, { color: theme.textMuted }]}>Delete account</Text>
         </Pressable>
       </View>
 

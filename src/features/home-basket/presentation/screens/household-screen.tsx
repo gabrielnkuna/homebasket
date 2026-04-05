@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Fonts, Radii, Spacing } from '@/constants/theme';
 import {
@@ -15,6 +15,10 @@ import {
   getDeviceCurrencyCode,
   getSuggestedCurrencyCodes,
 } from '@/shared/locale/currency-preferences';
+import {
+  getHomeBasketAbsoluteUrl,
+  HOME_BASKET_ROUTES,
+} from '@/shared/config/app-links';
 import {
   ActionButton,
   BrandBadge,
@@ -710,6 +714,25 @@ export default function HouseholdScreen() {
               />
             </>
           )}
+
+          <View style={styles.fieldBlock}>
+            <Text style={[styles.supportText, { color: theme.textMuted }]}>
+              Need to delete the linked account or request data deletion? Use the public deletion
+              page so the same path works on web, Android, and iPhone.
+            </Text>
+            <View style={styles.actionRow}>
+              <ActionButton
+                label="Delete account options"
+                tone="secondary"
+                onPress={() =>
+                  void Linking.openURL(
+                    getHomeBasketAbsoluteUrl(HOME_BASKET_ROUTES.deleteAccount)
+                  )
+                }
+                disabled={isSaving}
+              />
+            </View>
+          </View>
         </SectionCard>
       ) : null}
 

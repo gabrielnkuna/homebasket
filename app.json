@@ -20,7 +20,8 @@
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#1A4731",
-        "foregroundImage": "./assets/brand/homebasket_appicon.png"
+        "foregroundImage": "./assets/brand/homebasket_appicon.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [

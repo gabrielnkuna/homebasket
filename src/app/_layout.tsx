@@ -13,6 +13,8 @@ import PrivacyScreen from '@/features/site/presentation/screens/privacy-screen';
 import TermsScreen from '@/features/site/presentation/screens/terms-screen';
 import AndroidDownloadScreen from '@/features/site/presentation/screens/android-download-screen';
 import IosDownloadScreen from '@/features/site/presentation/screens/ios-download-screen';
+import SupportScreen from '@/features/site/presentation/screens/support-screen';
+import DeleteAccountScreen from '@/features/site/presentation/screens/delete-account-screen';
 import { BrandHero, ScreenShell, SectionCard } from '@/shared/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { HOME_BASKET_ROUTES } from '@/shared/config/app-links';
@@ -28,6 +30,8 @@ export default function RootLayout() {
   const isPublicInfoRoute =
     pathname === HOME_BASKET_ROUTES.privacy ||
     pathname === HOME_BASKET_ROUTES.terms ||
+    pathname === HOME_BASKET_ROUTES.support ||
+    pathname === HOME_BASKET_ROUTES.deleteAccount ||
     pathname === HOME_BASKET_ROUTES.android ||
     pathname === HOME_BASKET_ROUTES.ios;
 
@@ -46,6 +50,10 @@ export default function RootLayout() {
         <PrivacyScreen />
       ) : pathname === HOME_BASKET_ROUTES.terms ? (
         <TermsScreen />
+      ) : pathname === HOME_BASKET_ROUTES.support ? (
+        <SupportScreen />
+      ) : pathname === HOME_BASKET_ROUTES.deleteAccount ? (
+        <DeleteAccountScreen />
       ) : pathname === HOME_BASKET_ROUTES.android ? (
         <AndroidDownloadScreen />
       ) : pathname === HOME_BASKET_ROUTES.ios ? (

@@ -11,6 +11,7 @@ This pack gives you the minimum practical material to move from "working product
 - [Play Store assets checklist](./play-store-assets-checklist.md)
 - [Play Store creative brief](./play-store-creative-brief.md)
 - [Play Store screenshot runbook](./play-store-screenshot-runbook.md)
+- [App Store screenshot runbook](./app-store-screenshot-runbook.md)
 - [Privacy policy draft](./privacy-policy.md)
 - [Store listing copy](./store-listing-copy.md)
 - [Privacy policy starter](./privacy-policy-starter.md)
