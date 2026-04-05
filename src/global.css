@@ -9,3 +9,16 @@
     sans-serif;
   --font-serif: 'Iowan Old Style', Georgia, 'Times New Roman', serif;
 }
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html,
+body {
+  margin: 0;
+  background-color: #0f1713;
+  overscroll-behavior-y: none;
+}

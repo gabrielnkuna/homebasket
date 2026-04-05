@@ -3,9 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { Text } from 'react-native';
 import { usePathname } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import AppTabs from '@/components/app-tabs';
-import { createNavigationTheme } from '@/constants/theme';
+import { Colors, createNavigationTheme } from '@/constants/theme';
 import OnboardingScreen from '@/features/home-basket/presentation/screens/onboarding-screen';
 import { useHomeBasketStore } from '@/features/home-basket/presentation/use-home-basket-store';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -43,29 +44,42 @@ export default function RootLayout() {
     void initialize();
   }, [initialize, isPublicInfoRoute]);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const palette = Colors[themeMode];
+    document.documentElement.style.backgroundColor = palette.background;
+    document.documentElement.style.colorScheme = themeMode;
+    document.body.style.backgroundColor = palette.background;
+  }, [themeMode]);
+
   return (
-    <ThemeProvider value={createNavigationTheme(themeMode)}>
-      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
-      {pathname === HOME_BASKET_ROUTES.privacy ? (
-        <PrivacyScreen />
-      ) : pathname === HOME_BASKET_ROUTES.terms ? (
-        <TermsScreen />
-      ) : pathname === HOME_BASKET_ROUTES.support ? (
-        <SupportScreen />
-      ) : pathname === HOME_BASKET_ROUTES.deleteAccount ? (
-        <DeleteAccountScreen />
-      ) : pathname === HOME_BASKET_ROUTES.android ? (
-        <AndroidDownloadScreen />
-      ) : pathname === HOME_BASKET_ROUTES.ios ? (
-        <IosDownloadScreen />
-      ) : !isReady || isBootstrapping ? (
-        <BootstrapScreen />
-      ) : session ? (
-        <AppTabs />
-      ) : (
-        <OnboardingScreen />
-      )}
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={createNavigationTheme(themeMode)}>
+        <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
+        {pathname === HOME_BASKET_ROUTES.privacy ? (
+          <PrivacyScreen />
+        ) : pathname === HOME_BASKET_ROUTES.terms ? (
+          <TermsScreen />
+        ) : pathname === HOME_BASKET_ROUTES.support ? (
+          <SupportScreen />
+        ) : pathname === HOME_BASKET_ROUTES.deleteAccount ? (
+          <DeleteAccountScreen />
+        ) : pathname === HOME_BASKET_ROUTES.android ? (
+          <AndroidDownloadScreen />
+        ) : pathname === HOME_BASKET_ROUTES.ios ? (
+          <IosDownloadScreen />
+        ) : !isReady || isBootstrapping ? (
+          <BootstrapScreen />
+        ) : session ? (
+          <AppTabs />
+        ) : (
+          <OnboardingScreen />
+        )}
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 

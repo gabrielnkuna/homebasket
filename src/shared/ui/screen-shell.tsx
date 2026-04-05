@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
-  PanResponder,
   Platform,
   ScrollView,
   StyleProp,
@@ -11,6 +10,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fonts, MaxContentWidth, Radii, Shadows, Spacing } from '@/constants/theme';
@@ -61,75 +61,74 @@ export function ScreenShell({
   const canSwipeNavigate =
     swipeNavigationEnabled && Platform.OS !== 'web' && activeSwipeIndex !== -1;
 
-  const panResponder = React.useMemo(
+  const swipeGesture = React.useMemo(
     () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) =>
-          canSwipeNavigate &&
-          Math.abs(gestureState.dx) > 24 &&
-          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2,
-        onPanResponderRelease: (_, gestureState) => {
-          if (!canSwipeNavigate || Math.abs(gestureState.dx) < 72) {
+      Gesture.Pan()
+        .enabled(canSwipeNavigate)
+        .runOnJS(true)
+        .activeOffsetX([-24, 24])
+        .failOffsetY([-18, 18])
+        .onEnd((event) => {
+          if (
+            !canSwipeNavigate ||
+            Math.abs(event.translationX) < 72 ||
+            Math.abs(event.translationX) < Math.abs(event.translationY) * 1.2
+          ) {
             return;
           }
 
-          const direction = gestureState.dx < 0 ? 1 : -1;
+          const direction = event.translationX < 0 ? 1 : -1;
           const nextRoute = swipeRoutes[activeSwipeIndex + direction];
 
-          if (nextRoute) {
+          if (nextRoute && nextRoute !== pathname) {
             router.replace(nextRoute);
           }
-        },
-      }),
-    [activeSwipeIndex, canSwipeNavigate, router]
+        }),
+    [activeSwipeIndex, canSwipeNavigate, pathname, router]
   );
 
-  return (
-    <KeyboardAvoidingView
-      style={[styles.keyboardRoot, { backgroundColor: theme.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        {...(canSwipeNavigate ? panResponder.panHandlers : {})}
-        style={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-        automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingTop: topPadding,
-            paddingBottom: bottomPadding,
-            paddingLeft: Spacing.four,
-            paddingRight: Spacing.four,
-          },
-        ]}>
-        <View style={[styles.frame, contentStyle]}>
-          <View
-            style={[
-              styles.headerCard,
-              {
-                backgroundColor: theme.surface,
-                borderColor: theme.border,
-              },
-              Shadows.card,
-            ]}>
-            <View style={styles.headerContent}>
-              <View style={styles.headingStack}>
-                {headerArt ? <View style={styles.headerArt}>{headerArt}</View> : null}
-                {eyebrow ? <Text style={[styles.eyebrow, { color: theme.primary }]}>{eyebrow}</Text> : null}
-                <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-                {subtitle ? <Text style={[styles.subtitle, { color: theme.textMuted }]}>{subtitle}</Text> : null}
-              </View>
+  const content = (
+    <ScrollView
+      style={styles.scroll}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+      contentContainerStyle={[
+        styles.scrollContent,
+        {
+          paddingTop: topPadding,
+          paddingBottom: bottomPadding,
+          paddingLeft: Spacing.four,
+          paddingRight: Spacing.four,
+        },
+      ]}>
+      <View style={[styles.frame, contentStyle]}>
+        <View
+          style={[
+            styles.headerCard,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
+            Shadows.card,
+          ]}>
+          <View style={styles.headerContent}>
+            <View style={styles.headingStack}>
+              {headerArt ? <View style={styles.headerArt}>{headerArt}</View> : null}
+              {eyebrow ? <Text style={[styles.eyebrow, { color: theme.primary }]}>{eyebrow}</Text> : null}
+              <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+              {subtitle ? <Text style={[styles.subtitle, { color: theme.textMuted }]}>{subtitle}</Text> : null}
+            </View>
 
-              <View style={styles.headerMeta}>
+            <View style={styles.headerMeta}>
               {badge ? (
                 <View
                   style={[
                     styles.badge,
-                      {
-                        backgroundColor: theme.primarySoft,
-                        borderColor: theme.border,
-                      },
+                    {
+                      backgroundColor: theme.primarySoft,
+                      borderColor: theme.border,
+                    },
                   ]}>
                   <Text style={[styles.badgeText, { color: theme.primaryStrong }]}>{badge}</Text>
                 </View>
@@ -139,10 +138,17 @@ export function ScreenShell({
           </View>
         </View>
 
-          <View style={styles.sectionStack}>{children}</View>
-          <WebFooter />
-        </View>
-      </ScrollView>
+        <View style={styles.sectionStack}>{children}</View>
+        <WebFooter />
+      </View>
+    </ScrollView>
+  );
+
+  return (
+    <KeyboardAvoidingView
+      style={[styles.keyboardRoot, { backgroundColor: theme.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {canSwipeNavigate ? <GestureDetector gesture={swipeGesture}>{content}</GestureDetector> : content}
     </KeyboardAvoidingView>
   );
 }

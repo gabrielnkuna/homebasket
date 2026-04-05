@@ -165,8 +165,9 @@ export default function HomeScreen() {
 
   const handleAddItem = React.useCallback(() => {
     dismissAddItemFocus();
+    setFilter('all');
     void addItem();
-  }, [addItem, dismissAddItemFocus]);
+  }, [addItem, dismissAddItemFocus, setFilter]);
 
   if (!snapshot) {
     return (
@@ -627,8 +628,14 @@ export default function HomeScreen() {
         </SectionCard>
       ) : null}
 
-      {hasBasketItems ? activeBasketSection : addItemSection}
-      {hasBasketItems ? addItemSection : activeBasketSection}
+      {hasBasketItems ? (
+        <>
+          {activeBasketSection}
+          {addItemSection}
+        </>
+      ) : (
+        addItemSection
+      )}
     </ScreenShell>
   );
 }
