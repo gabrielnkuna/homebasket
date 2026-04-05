@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts, Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -25,6 +25,7 @@ export function PillButton({
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
+      focusable={Platform.OS !== 'android'}
       onPress={onPress}
       style={({ pressed }) => [
         styles.pressable,

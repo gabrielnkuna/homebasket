@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import React from 'react';
 import {
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -9,7 +10,11 @@ import {
 } from 'react-native';
 
 import { Fonts, Radii, Spacing } from '@/constants/theme';
-import { shoppingCategories, shoppingFilters } from '@/features/home-basket/domain/models';
+import {
+  ShoppingCategory,
+  shoppingCategories,
+  shoppingFilters,
+} from '@/features/home-basket/domain/models';
 import { buildHomeScreenModel } from '@/features/home-basket/presentation/selectors';
 import { useHomeBasketStore } from '@/features/home-basket/presentation/use-home-basket-store';
 import { useTheme } from '@/hooks/use-theme';
@@ -82,6 +87,86 @@ export default function HomeScreen() {
   const deleteItem = useHomeBasketStore((state) => state.deleteItem);
   const toggleItemStatus = useHomeBasketStore((state) => state.toggleItemStatus);
   const addReminderToBasket = useHomeBasketStore((state) => state.addReminderToBasket);
+  const addItemNameInputRef = React.useRef<TextInput | null>(null);
+  const addItemQuantityInputRef = React.useRef<TextInput | null>(null);
+  const addItemCustomCategoryInputRef = React.useRef<TextInput | null>(null);
+
+  const dismissAddItemFocus = React.useCallback(() => {
+    addItemNameInputRef.current?.blur();
+    addItemQuantityInputRef.current?.blur();
+    addItemCustomCategoryInputRef.current?.blur();
+    Keyboard.dismiss();
+  }, []);
+
+  const handleSetFilter = React.useCallback(
+    (nextFilter: (typeof shoppingFilters)[number]) => {
+      dismissAddItemFocus();
+      setFilter(nextFilter);
+    },
+    [dismissAddItemFocus, setFilter]
+  );
+
+  const handleSetSelectedMember = React.useCallback(
+    (memberId: string) => {
+      dismissAddItemFocus();
+      setSelectedMember(memberId);
+    },
+    [dismissAddItemFocus, setSelectedMember]
+  );
+
+  const handleStartEditingItem = React.useCallback(
+    (itemId: string) => {
+      dismissAddItemFocus();
+      startEditingItem(itemId);
+    },
+    [dismissAddItemFocus, startEditingItem]
+  );
+
+  const handleSaveItemEdits = React.useCallback(() => {
+    dismissAddItemFocus();
+    void saveItemEdits();
+  }, [dismissAddItemFocus, saveItemEdits]);
+
+  const handleDeleteItem = React.useCallback(
+    (itemId: string) => {
+      dismissAddItemFocus();
+      void deleteItem(itemId);
+    },
+    [deleteItem, dismissAddItemFocus]
+  );
+
+  const handleToggleItemStatus = React.useCallback(
+    (itemId: string) => {
+      dismissAddItemFocus();
+      void toggleItemStatus(itemId);
+    },
+    [dismissAddItemFocus, toggleItemStatus]
+  );
+
+  const handleAddSuggestedItem = React.useCallback(
+    (input: {
+      name: string;
+      quantity: string;
+      category: ShoppingCategory;
+    }) => {
+      dismissAddItemFocus();
+      void addSuggestedItem(input);
+    },
+    [addSuggestedItem, dismissAddItemFocus]
+  );
+
+  const handleAddReminderToBasket = React.useCallback(
+    (reminderId: string) => {
+      dismissAddItemFocus();
+      void addReminderToBasket(reminderId);
+    },
+    [addReminderToBasket, dismissAddItemFocus]
+  );
+
+  const handleAddItem = React.useCallback(() => {
+    dismissAddItemFocus();
+    void addItem();
+  }, [addItem, dismissAddItemFocus]);
 
   if (!snapshot) {
     return (
@@ -134,7 +219,7 @@ export default function HomeScreen() {
             key={itemFilter}
             label={itemFilter === 'all' ? 'All items' : itemFilter === 'pending' ? 'Pending' : 'Bought'}
             active={filter === itemFilter}
-            onPress={() => setFilter(itemFilter)}
+            onPress={() => handleSetFilter(itemFilter)}
           />
         ))}
       </View>
@@ -261,7 +346,7 @@ export default function HomeScreen() {
                       <>
                         <ActionButton
                           label="Save"
-                          onPress={() => void saveItemEdits()}
+                          onPress={handleSaveItemEdits}
                           disabled={isSaving}
                         />
                         <ActionButton
@@ -273,7 +358,7 @@ export default function HomeScreen() {
                         <ActionButton
                           label="Remove"
                           tone="secondary"
-                          onPress={() => void deleteItem(item.id)}
+                          onPress={() => handleDeleteItem(item.id)}
                           disabled={isSaving}
                         />
                       </>
@@ -282,13 +367,13 @@ export default function HomeScreen() {
                         <ActionButton
                           label={isBought ? 'Undo' : 'Mark bought'}
                           tone={isBought ? 'secondary' : 'primary'}
-                          onPress={() => void toggleItemStatus(item.id)}
+                          onPress={() => handleToggleItemStatus(item.id)}
                           disabled={isSaving}
                         />
                         <ActionButton
                           label="Edit"
                           tone="secondary"
-                          onPress={() => startEditingItem(item.id)}
+                          onPress={() => handleStartEditingItem(item.id)}
                           disabled={isSaving}
                         />
                       </>
@@ -313,7 +398,7 @@ export default function HomeScreen() {
             key={member.id}
             label={member.name}
             active={member.id === selectedMember.id}
-            onPress={() => setSelectedMember(member.id)}
+            onPress={() => handleSetSelectedMember(member.id)}
           />
         ))}
       </View>
@@ -322,6 +407,7 @@ export default function HomeScreen() {
         <View style={styles.gridFieldBlock}>
           <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Item name</Text>
           <TextInput
+            ref={addItemNameInputRef}
             value={addItemDraft.name}
             onChangeText={(name) => updateAddItemDraft({ name })}
             placeholder="Milk, rice, toothpaste..."
@@ -340,6 +426,7 @@ export default function HomeScreen() {
         <View style={styles.gridFieldBlock}>
           <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Quantity</Text>
           <TextInput
+            ref={addItemQuantityInputRef}
             value={addItemDraft.quantity}
             onChangeText={(quantity) => updateAddItemDraft({ quantity })}
             placeholder="1 pack"
@@ -375,6 +462,7 @@ export default function HomeScreen() {
           Custom category
         </Text>
         <TextInput
+          ref={addItemCustomCategoryInputRef}
           value={addItemDraft.customCategory}
           onChangeText={(customCategory) => updateAddItemDraft({ customCategory })}
           placeholder="Optional: Gardening, Hardware..."
@@ -396,7 +484,7 @@ export default function HomeScreen() {
 
       <ActionButton
         label={`Add as ${selectedMember.name}`}
-        onPress={() => void addItem()}
+        onPress={handleAddItem}
         disabled={isSaving || !addItemDraft.name.trim()}
       />
     </SectionCard>
@@ -489,7 +577,7 @@ export default function HomeScreen() {
                 <ActionButton
                   label={`Add as ${selectedMember.name}`}
                   tone="secondary"
-                  onPress={() => void addReminderToBasket(reminder.id)}
+                  onPress={() => handleAddReminderToBasket(reminder.id)}
                 />
               </View>
             ))}
@@ -525,7 +613,7 @@ export default function HomeScreen() {
                   label="Add back"
                   tone="secondary"
                   onPress={() =>
-                    void addSuggestedItem({
+                    handleAddSuggestedItem({
                       name: suggestion.name,
                       quantity: suggestion.quantity,
                       category: suggestion.category,

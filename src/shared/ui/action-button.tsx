@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text } from 'react-native';
 
 import { Fonts, Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -25,6 +25,7 @@ export function ActionButton({
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
+      focusable={Platform.OS !== 'android'}
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
