@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fonts, MaxContentWidth, Radii, Shadows, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { WebFooter } from './web-footer';
 
 const swipeRoutes = ['/', '/purchases', '/household'] as const;
 
@@ -139,6 +140,7 @@ export function ScreenShell({
         </View>
 
           <View style={styles.sectionStack}>{children}</View>
+          <WebFooter />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
