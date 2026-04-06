@@ -41,11 +41,13 @@ With EAS remote app versioning enabled in `eas.json`, release version management
 
 ### Store/support metadata is not part of app config
 
-You still need to prepare outside the repo:
+These live outside app config and must still be completed in the store consoles:
 
 - Play Console app details
-- privacy policy URL
-- support email
+- privacy policy URL: `https://homebasketapp.com/privacy`
+- support URL: `https://homebasketapp.com/support`
+- support email: `gabriel@transcripe.com`
+- account deletion URL: `https://homebasketapp.com/delete-account`
 - app access declarations if needed
 - data safety form
 
@@ -69,4 +71,4 @@ What this means:
 2. Keep `eas.json` as the build baseline.
 3. Create a proper Play feature graphic.
 4. Capture at least one strong phone screenshot set from the latest UI.
-5. Publish the privacy policy on a public URL and finalize support contact.
+5. Use the live public URLs for privacy, support, and account deletion during store setup.

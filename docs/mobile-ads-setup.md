@@ -47,10 +47,16 @@ EXPO_PUBLIC_ADMOB_USE_TEST_IDS=false
 Preview and development builds are already configured to use Google sample app IDs and test ad units.
 That lets you test the full banner/interstitial flow safely before real monetization goes live.
 
+Ad timing is also intentionally softened:
+
+- preview builds wait until the app has been opened 3 times before ads can appear
+- production builds wait until the app has been opened 10 times before ads can appear
+
 ## Placement notes
 
 - Banner ads appear near the top of the main mobile screens: `List`, `Purchases`, and `Household`
 - Interstitial ads only show at a natural pause, not while the user is typing or editing
+- Ads are delayed on fresh installs so the first-run experience stays clean
 - Web stays ad-free for now
 
 ## Recommended rollout order

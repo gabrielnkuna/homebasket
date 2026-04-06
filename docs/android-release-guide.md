@@ -42,8 +42,10 @@ Current repo choice:
 
 Before submission, prepare:
 
-- support email
-- privacy policy URL
+- support email: `gabriel@transcripe.com`
+- privacy policy URL: `https://homebasketapp.com/privacy`
+- support URL: `https://homebasketapp.com/support`
+- account deletion URL: `https://homebasketapp.com/delete-account`
 - optional marketing site URL
 
 ## Build profiles now available
@@ -118,7 +120,13 @@ Do not commit that JSON key into the repo.
 
 ## Privacy policy note
 
-Google Play requires a public privacy policy URL. The policy draft for this repo is in `docs/privacy-policy.md`, but you still need to publish it on a public webpage before submission.
+Google Play requires a public privacy policy URL. Home Basket now has live public pages:
+
+- Privacy: `https://homebasketapp.com/privacy`
+- Support: `https://homebasketapp.com/support`
+- Delete account: `https://homebasketapp.com/delete-account`
+
+Use those exact URLs in Play Console.
 
 ## Official references
 

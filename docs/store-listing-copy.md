@@ -67,7 +67,11 @@ Whether you shop in person, order online, or use delivery apps, Home Basket help
 - Payday-based cycle budgeting
 - Household reminders and recurring staples
 
-## Support contact placeholder
+## Support contact
 
 - Support email: gabriel@transcripe.com
-- Privacy policy URL: publish [privacy-policy.md](./privacy-policy.md) on a public URL before Play submission
+- Website: https://homebasketapp.com
+- Privacy policy URL: https://homebasketapp.com/privacy
+- Terms URL: https://homebasketapp.com/terms
+- Support URL: https://homebasketapp.com/support
+- Account deletion URL: https://homebasketapp.com/delete-account

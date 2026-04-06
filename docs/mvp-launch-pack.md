@@ -12,6 +12,8 @@ This pack gives you the minimum practical material to move from "working product
 - [Play Store creative brief](./play-store-creative-brief.md)
 - [Play Store screenshot runbook](./play-store-screenshot-runbook.md)
 - [App Store screenshot runbook](./app-store-screenshot-runbook.md)
+- [Store compliance answers](./store-compliance-answers.md)
+- [Post-MVP premium roadmap](./post-mvp-premium-roadmap.md)
 - [Privacy policy draft](./privacy-policy.md)
 - [Store listing copy](./store-listing-copy.md)
 - [Privacy policy starter](./privacy-policy-starter.md)
@@ -61,6 +63,21 @@ For the first public release, the strongest story is:
 - CSV export for the current budget cycle
 - Crash reporting and analytics
 - Role polish for owner-only actions
+
+## Premium track after MVP
+
+Keep premium work off `main` until store launch is stable.
+
+Suggested premium branches:
+
+- `premium/receipt-ai`
+- `premium/retail-integrations`
+- `premium/subscriptions`
+- `premium/admin-controls`
+
+See the dedicated roadmap:
+
+- [Post-MVP premium roadmap](./post-mvp-premium-roadmap.md)
 
 ## Production notes
 
