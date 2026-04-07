@@ -22,7 +22,6 @@ import {
 } from '@/shared/config/app-links';
 import {
   ActionButton,
-  BrandBadge,
   CurrencySelector,
   MessageBanner,
   MetricCard,
@@ -102,7 +101,6 @@ export default function HouseholdScreen() {
           `Permission: ${info.permissionStatus}`,
           `API result: ${info.result ? 'accepted' : 'not accepted'}`,
           `Direct badge: ${info.directBadgeSet ? 'yes' : 'no'}`,
-          `Fallback notification: ${info.fallbackNotificationSet ? 'yes' : 'no'}`,
           `Android channel badge: ${info.androidShowBadge === null ? 'n/a' : info.androidShowBadge ? 'yes' : 'no'}`,
           `Updated: ${info.updatedAt || 'n/a'}`,
         ].join('\n')
@@ -164,7 +162,6 @@ export default function HouseholdScreen() {
       eyebrow="Household"
       title="Who is shopping this week?"
       swipeNavigationEnabled
-      headerAccessory={<BrandBadge />}
       subtitle="Keep the shared list simple: everyone can add items, one shopper closes the trip, and the household always sees the current state.">
       {error ? <MessageBanner message={error} tone="error" /> : null}
       {!error && notice ? <MessageBanner message={notice} /> : null}

@@ -22,7 +22,6 @@ import { formatCurrency } from '@/shared/format/currency';
 import { formatLongDate, formatShortDate } from '@/shared/format/date';
 import {
   ActionButton,
-  BrandBadge,
   MessageBanner,
   MetricCard,
   PillButton,
@@ -496,7 +495,6 @@ export default function HomeScreen() {
       eyebrow="Shared household list"
       title={snapshot.household.name}
       swipeNavigationEnabled
-      headerAccessory={<BrandBadge />}
       subtitle="Add items quickly, mark them as bought while you shop, and move completed items into purchase history only when the basket is closed.">
       <View style={styles.metricGrid}>
         <MetricCard

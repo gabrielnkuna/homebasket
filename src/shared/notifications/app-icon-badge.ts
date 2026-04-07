@@ -6,7 +6,6 @@ export async function getAppIconBadgeDebugInfoAsync(_pendingItemsCount: number) 
   return {
     badgeCount: 0,
     directBadgeSet: false,
-    fallbackNotificationSet: false,
     permissionGranted: false,
     channelReady: false,
     platform: 'web',

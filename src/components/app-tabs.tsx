@@ -12,6 +12,7 @@ import { usePathname, useRouter } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { Colors, Fonts, MaxContentWidth, Radii, Spacing } from '@/constants/theme';
+import { BrandBadge } from '@/shared/ui';
 
 const swipeRoutes = ['/', '/purchases', '/household'] as const;
 
@@ -53,6 +54,9 @@ export default function AppTabs() {
       </GestureDetector>
       <TabList asChild>
         <CustomTabList>
+          <View style={styles.brandBlock}>
+            <BrandBadge size={42} />
+          </View>
           <TabTrigger name="list" href="/" asChild>
             <TabButton>List</TabButton>
           </TabTrigger>
@@ -128,11 +132,13 @@ const styles = StyleSheet.create({
     borderRadius: Radii.large,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
     borderWidth: 1,
     flexGrow: 1,
     gap: Spacing.two,
     maxWidth: MaxContentWidth,
+  },
+  brandBlock: {
+    marginRight: 'auto',
   },
   pressed: {
     opacity: 0.7,

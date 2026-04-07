@@ -17,7 +17,6 @@ import { formatCurrency } from '@/shared/format/currency';
 import { formatLongDate, formatShortDate } from '@/shared/format/date';
 import {
   ActionButton,
-  BrandBadge,
   MessageBanner,
   MetricCard,
   PillButton,
@@ -110,7 +109,6 @@ export default function TripsScreen() {
       eyebrow="Purchases"
       title="Record a purchase"
       swipeNavigationEnabled
-      headerAccessory={<BrandBadge />}
       subtitle="Record what was bought once the order or checkout is done. Bought items move into history, and you can also log ad hoc purchases with a receipt even when nothing was pre-added to the list.">
       <View style={styles.metricGrid}>
         <MetricCard

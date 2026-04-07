@@ -52,7 +52,6 @@ Likely data collected by the current app:
 Notification and badge behavior:
 
 - Home Basket may request notification or badge permission so the app icon can show the number of items still to be bought.
-- On Android devices where launcher badges depend on notifications, Home Basket may use a quiet basket-status notification to support the badge count.
 - Home Basket does not use this badge feature for marketing push notifications.
 
 Likely data sharing to disclose when ads are enabled:
