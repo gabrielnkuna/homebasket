@@ -46,7 +46,8 @@ Before submission, prepare:
 - privacy policy URL: `https://homebasketapp.com/privacy`
 - support URL: `https://homebasketapp.com/support`
 - account deletion URL: `https://homebasketapp.com/delete-account`
-- optional marketing site URL
+- developer website URL: `https://homebasketapp.com`
+- AdMob app-ads.txt URL after web deploy: `https://homebasketapp.com/app-ads.txt`
 
 ## Build profiles now available
 
@@ -117,6 +118,20 @@ eas submit --platform android --profile production
 For automated Play submission, you will need a Google Play service account key with the correct Play Console permissions.
 
 Do not commit that JSON key into the repo.
+
+## AdMob app-ads.txt note
+
+Home Basket includes `public/app-ads.txt` for AdMob verification.
+
+After the next Firebase Hosting deploy, confirm this URL works:
+
+- `https://homebasketapp.com/app-ads.txt`
+
+Expected content:
+
+```text
+google.com, pub-4275448719705182, DIRECT, f08c47fec0942fa0
+```
 
 ## Privacy policy note
 

@@ -11,6 +11,7 @@ It is not legal advice and it should be reviewed against the exact state of the 
 - Terms URL: `https://homebasketapp.com/terms`
 - Support URL: `https://homebasketapp.com/support`
 - Account deletion URL: `https://homebasketapp.com/delete-account`
+- AdMob app-ads.txt URL: `https://homebasketapp.com/app-ads.txt`
 
 ## Google Play draft answers
 
@@ -69,6 +70,7 @@ Important:
 
 - Review Google's latest Mobile Ads SDK disclosure guide before locking the final Data safety answers.
 - If you disable ads in the release build, the disclosure surface becomes simpler.
+- Use `https://homebasketapp.com` as the developer website so AdMob can discover `https://homebasketapp.com/app-ads.txt`.
 
 ## Apple App Store Connect draft answers
 

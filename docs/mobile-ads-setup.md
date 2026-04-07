@@ -29,17 +29,45 @@ Home Basket now supports:
 
 ## Environment values to set before store builds
 
-Add these real values to your EAS production environment before the final store builds:
+These real values are now configured in the `production` profile in `eas.json`:
 
 ```bash
-EXPO_PUBLIC_ADMOB_ANDROID_APP_ID=ca-app-pub-xxxxxxxxxxxxxxxx~xxxxxxxxxx
-EXPO_PUBLIC_ADMOB_IOS_APP_ID=ca-app-pub-xxxxxxxxxxxxxxxx~xxxxxxxxxx
-EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID=ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx
-EXPO_PUBLIC_ADMOB_IOS_BANNER_ID=ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx
-EXPO_PUBLIC_ADMOB_ANDROID_INTERSTITIAL_ID=ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx
-EXPO_PUBLIC_ADMOB_IOS_INTERSTITIAL_ID=ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx
+EXPO_PUBLIC_ADMOB_ANDROID_APP_ID=ca-app-pub-4275448719705182~5145501182
+EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID=ca-app-pub-4275448719705182/5994511016
+EXPO_PUBLIC_ADMOB_ANDROID_INTERSTITIAL_ID=ca-app-pub-4275448719705182/9545474292
+EXPO_PUBLIC_ADMOB_IOS_APP_ID=ca-app-pub-4275448719705182~6919310952
+EXPO_PUBLIC_ADMOB_IOS_BANNER_ID=ca-app-pub-4275448719705182/7849249244
+EXPO_PUBLIC_ADMOB_IOS_INTERSTITIAL_ID=ca-app-pub-4275448719705182/6456276528
 EXPO_PUBLIC_ADS_ENABLED=true
 EXPO_PUBLIC_ADMOB_USE_TEST_IDS=false
+```
+
+## app-ads.txt
+
+AdMob should be able to verify the developer website from the store listing.
+
+Use this developer website in Google Play:
+
+```text
+https://homebasketapp.com
+```
+
+The root `app-ads.txt` file is included in the repo at:
+
+```text
+public/app-ads.txt
+```
+
+Expected live URL after the next Firebase Hosting deploy:
+
+```text
+https://homebasketapp.com/app-ads.txt
+```
+
+Expected content:
+
+```text
+google.com, pub-4275448719705182, DIRECT, f08c47fec0942fa0
 ```
 
 ## Preview builds
@@ -63,6 +91,7 @@ Ad timing is also intentionally softened:
 
 1. Test preview ads on Android and iPhone
 2. Confirm consent flow on a European device or test region
-3. Add real AdMob IDs to production environment
+3. Confirm real AdMob IDs are still present in the production build profile
 4. Rebuild Android and iPhone production binaries
 5. Update store privacy/data safety forms before submission
+6. Deploy web so `https://homebasketapp.com/app-ads.txt` is live
