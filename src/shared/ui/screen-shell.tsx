@@ -49,14 +49,20 @@ export function ScreenShell({
 
   const bottomPadding = Platform.select({
     web: Spacing.seven,
-    default: insets.bottom + Spacing.six,
+    default: insets.bottom + Spacing.six + Spacing.seven,
+  });
+
+  const keyboardAvoidingBehavior = Platform.select({
+    ios: 'padding' as const,
+    android: 'height' as const,
+    default: undefined,
   });
 
   const content = (
     <ScrollView
       style={styles.scroll}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      keyboardShouldPersistTaps="always"
+      keyboardDismissMode="none"
       automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
       contentContainerStyle={[
         styles.scrollContent,
@@ -114,7 +120,7 @@ export function ScreenShell({
   return (
     <KeyboardAvoidingView
       style={[styles.keyboardRoot, { backgroundColor: theme.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      behavior={keyboardAvoidingBehavior}>
       {content}
     </KeyboardAvoidingView>
   );

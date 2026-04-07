@@ -40,6 +40,7 @@ export default function TripsScreen() {
   const removeTripPurchasedItemDraft = useHomeBasketStore((state) => state.removeTripPurchasedItemDraft);
   const applyReceiptDetectedItems = useHomeBasketStore((state) => state.applyReceiptDetectedItems);
   const addTripItemsBackToBasket = useHomeBasketStore((state) => state.addTripItemsBackToBasket);
+  const toggleItemStatus = useHomeBasketStore((state) => state.toggleItemStatus);
   const completeTrip = useHomeBasketStore((state) => state.completeTrip);
   const pickTripReceipt = useHomeBasketStore((state) => state.pickTripReceipt);
   const analyzeTripReceipt = useHomeBasketStore((state) => state.analyzeTripReceipt);
@@ -343,120 +344,191 @@ export default function TripsScreen() {
         </View>
 
         <View style={styles.fieldBlock}>
-          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Purchased items</Text>
+          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Purchase review</Text>
           <Text style={[styles.supportText, { color: theme.textMuted }]}>
-            Review what will be stored in this purchase history. You can edit OCR results, add missing
-            lines manually, and use any category that fits, like Gardening or Other.
+            Start with the items already marked as bought. Add extra lines only when the purchase
+            included something that was not on the shared list.
           </Text>
-          <View style={styles.actionRow}>
-            <ActionButton
-              label="Add purchased item"
-              tone="secondary"
-              onPress={addTripPurchasedItemDraft}
-              disabled={isSaving || isAnalyzingReceipt}
-            />
-            {tripDraft.receiptAnalysis?.items.length ? (
+
+          <View style={styles.purchaseReviewGroup}>
+            <Text style={[styles.receiptPreviewTitle, { color: theme.text }]}>
+              Bought from basket
+            </Text>
+            {model.readyItems.length === 0 ? (
+              <Text style={[styles.tripItems, { color: theme.textMuted }]}>
+                No basket items are marked as bought yet. You can still record an ad hoc purchase
+                below.
+              </Text>
+            ) : (
+              <View style={styles.tripDraftList}>
+                {model.readyItems.map((item) => (
+                  <View
+                    key={`ready-item-${item.id}`}
+                    style={[
+                      styles.tripDraftCard,
+                      {
+                        backgroundColor: theme.surface,
+                        borderColor: theme.border,
+                      },
+                    ]}>
+                    <View style={styles.readyItemRow}>
+                      <View style={styles.readyItemCopy}>
+                        <Text style={[styles.receiptPreviewTitle, { color: theme.text }]}>
+                          {item.name}
+                        </Text>
+                        <View style={styles.readyItemDetailsRow}>
+                          <Text
+                            style={[
+                              styles.readyItemQuantityLabel,
+                              {
+                                backgroundColor: theme.surfaceMuted,
+                                borderColor: theme.border,
+                                color: theme.text,
+                              },
+                            ]}>
+                            Qty {item.quantity}
+                          </Text>
+                          <Text style={[styles.tripItems, { color: theme.textMuted }]}>
+                            Category: {item.category}
+                          </Text>
+                        </View>
+                      </View>
+                      <ActionButton
+                        label="Move back to pending"
+                        tone="secondary"
+                        onPress={() => void toggleItemStatus(item.id)}
+                        disabled={isSaving || isAnalyzingReceipt}
+                      />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <View style={styles.purchaseReviewGroup}>
+            <Text style={[styles.receiptPreviewTitle, { color: theme.text }]}>
+              Extra purchased items
+            </Text>
+            <Text style={[styles.supportText, { color: theme.textMuted }]}>
+              Use this for OCR lines or anything bought that was not already on the basket.
+            </Text>
+            <View style={styles.actionRow}>
               <ActionButton
-                label="Use detected items"
+                label="Add purchased item"
                 tone="secondary"
-                onPress={applyReceiptDetectedItems}
+                onPress={addTripPurchasedItemDraft}
                 disabled={isSaving || isAnalyzingReceipt}
               />
-            ) : null}
-          </View>
-          {tripDraft.purchasedItemsDraft.length === 0 ? (
-            <Text style={[styles.tripItems, { color: theme.textMuted }]}>
-              No reviewed purchased items yet. Add them manually or load the receipt-detected lines.
-            </Text>
-          ) : (
-            <View style={styles.tripDraftList}>
-              {tripDraft.purchasedItemsDraft.map((item, index) => (
-                <View
-                  key={`trip-draft-item-${index}`}
-                  style={[
-                    styles.tripDraftCard,
-                    {
-                      backgroundColor: theme.surface,
-                      borderColor: theme.border,
-                    },
-                  ]}>
-                  <View style={styles.formGrid}>
-                    <View style={styles.gridFieldBlock}>
-                      <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Item name</Text>
-                      <TextInput
-                        value={item.name}
-                        onChangeText={(name) =>
-                          updateTripPurchasedItemDraft(index, {
-                            name,
-                          })
-                        }
-                        placeholder="Tomatoes"
-                        placeholderTextColor={theme.textMuted}
-                        style={[
-                          styles.input,
-                          {
-                            backgroundColor: theme.surfaceMuted,
-                            borderColor: theme.border,
-                            color: theme.text,
-                          },
-                        ]}
-                      />
-                    </View>
-                    <View style={styles.gridFieldBlock}>
-                      <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Quantity</Text>
-                      <TextInput
-                        value={item.quantity}
-                        onChangeText={(quantity) =>
-                          updateTripPurchasedItemDraft(index, {
-                            quantity,
-                          })
-                        }
-                        placeholder="1"
-                        placeholderTextColor={theme.textMuted}
-                        style={[
-                          styles.input,
-                          {
-                            backgroundColor: theme.surfaceMuted,
-                            borderColor: theme.border,
-                            color: theme.text,
-                          },
-                        ]}
-                      />
-                    </View>
-                    <View style={styles.gridFieldBlock}>
-                      <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Category</Text>
-                      <TextInput
-                        value={item.category}
-                        onChangeText={(category) =>
-                          updateTripPurchasedItemDraft(index, {
-                            category,
-                          })
-                        }
-                        placeholder="Produce, Pantry, Gardening, Other..."
-                        placeholderTextColor={theme.textMuted}
-                        style={[
-                          styles.input,
-                          {
-                            backgroundColor: theme.surfaceMuted,
-                            borderColor: theme.border,
-                            color: theme.text,
-                          },
-                        ]}
-                      />
-                    </View>
-                  </View>
-                  <View style={styles.actionRow}>
-                    <ActionButton
-                      label="Remove item"
-                      tone="secondary"
-                      onPress={() => removeTripPurchasedItemDraft(index)}
-                      disabled={isSaving || isAnalyzingReceipt}
-                    />
-                  </View>
-                </View>
-              ))}
+              {tripDraft.receiptAnalysis?.items.length ? (
+                <ActionButton
+                  label="Use detected items"
+                  tone="secondary"
+                  onPress={applyReceiptDetectedItems}
+                  disabled={isSaving || isAnalyzingReceipt}
+                />
+              ) : null}
             </View>
-          )}
+            {tripDraft.purchasedItemsDraft.length === 0 ? (
+              <Text style={[styles.tripItems, { color: theme.textMuted }]}>
+                No extra purchased items yet.
+              </Text>
+            ) : (
+              <View style={styles.tripDraftList}>
+                {tripDraft.purchasedItemsDraft.map((item, index) => (
+                  <View
+                    key={`trip-draft-item-${index}`}
+                    style={[
+                      styles.tripDraftCard,
+                      {
+                        backgroundColor: theme.surface,
+                        borderColor: theme.border,
+                      },
+                    ]}>
+                    <View style={styles.formGrid}>
+                      <View style={styles.gridFieldBlock}>
+                        <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+                          Item name
+                        </Text>
+                        <TextInput
+                          value={item.name}
+                          onChangeText={(name) =>
+                            updateTripPurchasedItemDraft(index, {
+                              name,
+                            })
+                          }
+                          placeholder="Tomatoes"
+                          placeholderTextColor={theme.textMuted}
+                          style={[
+                            styles.input,
+                            {
+                              backgroundColor: theme.surfaceMuted,
+                              borderColor: theme.border,
+                              color: theme.text,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <View style={styles.gridFieldBlock}>
+                        <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+                          Quantity
+                        </Text>
+                        <TextInput
+                          value={item.quantity}
+                          onChangeText={(quantity) =>
+                            updateTripPurchasedItemDraft(index, {
+                              quantity,
+                            })
+                          }
+                          placeholder="1"
+                          placeholderTextColor={theme.textMuted}
+                          style={[
+                            styles.input,
+                            {
+                              backgroundColor: theme.surfaceMuted,
+                              borderColor: theme.border,
+                              color: theme.text,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <View style={styles.gridFieldBlock}>
+                        <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+                          Category
+                        </Text>
+                        <TextInput
+                          value={item.category}
+                          onChangeText={(category) =>
+                            updateTripPurchasedItemDraft(index, {
+                              category,
+                            })
+                          }
+                          placeholder="Produce, Pantry, Gardening, Other..."
+                          placeholderTextColor={theme.textMuted}
+                          style={[
+                            styles.input,
+                            {
+                              backgroundColor: theme.surfaceMuted,
+                              borderColor: theme.border,
+                              color: theme.text,
+                            },
+                          ]}
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.actionRow}>
+                      <ActionButton
+                        label="Remove item"
+                        tone="secondary"
+                        onPress={() => removeTripPurchasedItemDraft(index)}
+                        disabled={isSaving || isAnalyzingReceipt}
+                      />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
         </View>
 
         <Text style={[styles.supportText, { color: theme.textMuted }]}>
@@ -673,6 +745,9 @@ const styles = StyleSheet.create({
   receiptItemList: {
     gap: Spacing.one,
   },
+  purchaseReviewGroup: {
+    gap: Spacing.two,
+  },
   tripDraftList: {
     gap: Spacing.two,
   },
@@ -681,6 +756,34 @@ const styles = StyleSheet.create({
     borderRadius: Radii.medium,
     padding: Spacing.three,
     gap: Spacing.two,
+  },
+  readyItemRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
+  readyItemCopy: {
+    flex: 1,
+    minWidth: 180,
+    gap: Spacing.one,
+  },
+  readyItemDetailsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  readyItemQuantityLabel: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderRadius: Radii.pill,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 4,
+    fontFamily: Fonts.sans,
+    fontSize: 12,
+    fontWeight: '800',
   },
   receiptPreviewTitle: {
     fontFamily: Fonts.sans,

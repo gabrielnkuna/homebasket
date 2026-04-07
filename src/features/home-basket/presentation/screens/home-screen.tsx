@@ -335,9 +335,22 @@ export default function HomeScreen() {
                             </Text>
                           </View>
                         </View>
-                        <Text style={[styles.itemMeta, { color: theme.textMuted }]}>
-                          {item.quantity} - {addedBy?.name ?? 'Unknown'} - {formatShortDate(item.addedAt)}
-                        </Text>
+                        <View style={styles.itemDetailsRow}>
+                          <Text
+                            style={[
+                              styles.itemQuantityLabel,
+                              {
+                                backgroundColor: theme.surfaceMuted,
+                                borderColor: theme.border,
+                                color: theme.text,
+                              },
+                            ]}>
+                            Qty {item.quantity}
+                          </Text>
+                          <Text style={[styles.itemMeta, { color: theme.textMuted }]}>
+                            Added by {addedBy?.name ?? 'Unknown'} on {formatShortDate(item.addedAt)}
+                          </Text>
+                        </View>
                       </>
                     )}
                   </View>
@@ -751,6 +764,22 @@ const styles = StyleSheet.create({
   itemMeta: {
     fontFamily: Fonts.sans,
     fontSize: 13,
+  },
+  itemDetailsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  itemQuantityLabel: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderRadius: Radii.pill,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 4,
+    fontFamily: Fonts.sans,
+    fontSize: 12,
+    fontWeight: '800',
   },
   listActionColumn: {
     width: 150,

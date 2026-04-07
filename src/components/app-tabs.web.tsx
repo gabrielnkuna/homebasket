@@ -7,29 +7,39 @@ import {
   TabListProps,
 } from 'expo-router/ui';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+  useWindowDimensions,
+} from 'react-native';
 
 import { Colors, Fonts, MaxContentWidth, Radii, Spacing } from '@/constants/theme';
-import { BrandNavLockup } from '@/shared/ui';
+import { BrandBadge, BrandNavLockup } from '@/shared/ui';
 
 export default function AppTabs() {
+  const { width } = useWindowDimensions();
+  const isCompactHeader = width < 640;
+
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
-        <CustomTabList>
+        <CustomTabList compact={isCompactHeader}>
           <View style={styles.brandBlock}>
-            <BrandNavLockup />
+            {isCompactHeader ? <BrandBadge size={34} /> : <BrandNavLockup />}
           </View>
 
           <TabTrigger name="list" href="/" asChild>
-            <TabButton>List</TabButton>
+            <TabButton compact={isCompactHeader}>List</TabButton>
           </TabTrigger>
           <TabTrigger name="purchases" href="/purchases" asChild>
-            <TabButton>Purchases</TabButton>
+            <TabButton compact={isCompactHeader}>Purchases</TabButton>
           </TabTrigger>
           <TabTrigger name="household" href="/household" asChild>
-            <TabButton>Household</TabButton>
+            <TabButton compact={isCompactHeader}>Household</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -37,7 +47,11 @@ export default function AppTabs() {
   );
 }
 
-export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+type TabButtonProps = TabTriggerSlotProps & {
+  compact?: boolean;
+};
+
+export function TabButton({ children, isFocused, compact = false, ...props }: TabButtonProps) {
   const scheme = useColorScheme();
   const theme = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
@@ -46,12 +60,18 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
       <View
         style={[
           styles.tabButtonView,
+          compact && styles.tabButtonViewCompact,
           {
             backgroundColor: isFocused ? theme.primarySoft : theme.surfaceMuted,
             borderColor: theme.border,
           },
         ]}>
-        <Text style={[styles.tabButtonText, { color: isFocused ? theme.text : theme.textMuted }]}>
+        <Text
+          style={[
+            styles.tabButtonText,
+            compact && styles.tabButtonTextCompact,
+            { color: isFocused ? theme.text : theme.textMuted },
+          ]}>
           {children}
         </Text>
       </View>
@@ -59,15 +79,20 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
   );
 }
 
-export function CustomTabList(props: TabListProps) {
+type CustomTabListProps = TabListProps & {
+  compact?: boolean;
+};
+
+export function CustomTabList({ compact = false, ...props }: CustomTabListProps) {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
   return (
-    <View {...props} style={styles.tabListContainer}>
+    <View {...props} style={[styles.tabListContainer, compact && styles.tabListContainerCompact]}>
       <View
         style={[
           styles.innerContainer,
+          compact && styles.innerContainerCompact,
           {
             backgroundColor: colors.surface,
             borderColor: colors.border,
@@ -88,6 +113,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
   },
+  tabListContainerCompact: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.two,
+  },
   innerContainer: {
     paddingVertical: Spacing.three,
     paddingHorizontal: Spacing.five,
@@ -98,6 +127,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: Spacing.two,
     maxWidth: MaxContentWidth,
+  },
+  innerContainerCompact: {
+    width: '100%',
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    gap: Spacing.one,
   },
   brandBlock: {
     marginRight: 'auto',
@@ -111,9 +146,16 @@ const styles = StyleSheet.create({
     borderRadius: Radii.pill,
     borderWidth: 1,
   },
+  tabButtonViewCompact: {
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.two,
+  },
   tabButtonText: {
     fontFamily: Fonts.sans,
     fontSize: 13,
     fontWeight: '700',
+  },
+  tabButtonTextCompact: {
+    fontSize: 12,
   },
 });
