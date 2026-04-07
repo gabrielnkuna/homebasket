@@ -59,6 +59,7 @@ npm run typecheck
 - [Play Store assets checklist](./docs/play-store-assets-checklist.md)
 - [Play Store creative brief](./docs/play-store-creative-brief.md)
 - [Play Store screenshot runbook](./docs/play-store-screenshot-runbook.md)
+- [Play Console submission runbook](./docs/play-console-runbook.md)
 - [Store compliance answers](./docs/store-compliance-answers.md)
 - [Mobile deployment scripts](./docs/mobile-deployment-scripts.md)
 - [Mobile ads setup](./docs/mobile-ads-setup.md)

@@ -11,6 +11,7 @@ This pack gives you the minimum practical material to move from "working product
 - [Play Store assets checklist](./play-store-assets-checklist.md)
 - [Play Store creative brief](./play-store-creative-brief.md)
 - [Play Store screenshot runbook](./play-store-screenshot-runbook.md)
+- [Play Console submission runbook](./play-console-runbook.md)
 - [App Store screenshot runbook](./app-store-screenshot-runbook.md)
 - [Store compliance answers](./store-compliance-answers.md)
 - [Post-MVP premium roadmap](./post-mvp-premium-roadmap.md)
