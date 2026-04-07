@@ -7,6 +7,15 @@ const ANDROID_BASKET_BADGE_NOTIFICATION_STORAGE_KEY = 'home-basket:basket-badge-
 
 let badgePermissionRequestedThisSession = false;
 let notificationHandlerConfigured = false;
+let lastBadgeDebugState = {
+  badgeCount: 0,
+  directBadgeSet: false,
+  fallbackNotificationSet: false,
+  permissionGranted: false,
+  channelReady: false,
+  platform: Platform.OS,
+  updatedAt: '',
+};
 
 function normalizeBadgeCount(count: number) {
   if (!Number.isFinite(count) || count <= 0) {
@@ -35,7 +44,7 @@ function configureAndroidNotificationHandler() {
 
 async function ensureAndroidBadgeChannelAsync() {
   if (Platform.OS !== 'android') {
-    return;
+    return false;
   }
 
   await Notifications.setNotificationChannelAsync(ANDROID_BASKET_BADGE_CHANNEL_ID, {
@@ -46,15 +55,24 @@ async function ensureAndroidBadgeChannelAsync() {
     enableVibrate: false,
     sound: null,
   });
+
+  return true;
 }
 
 async function ensureBadgePermissionAsync() {
   if (Platform.OS === 'android') {
-    await ensureAndroidBadgeChannelAsync();
+    lastBadgeDebugState = {
+      ...lastBadgeDebugState,
+      channelReady: await ensureAndroidBadgeChannelAsync(),
+    };
 
     const currentPermissions = await Notifications.getPermissionsAsync();
 
     if (currentPermissions.granted) {
+      lastBadgeDebugState = {
+        ...lastBadgeDebugState,
+        permissionGranted: true,
+      };
       return true;
     }
 
@@ -65,6 +83,10 @@ async function ensureBadgePermissionAsync() {
     badgePermissionRequestedThisSession = true;
 
     const requestedPermissions = await Notifications.requestPermissionsAsync();
+    lastBadgeDebugState = {
+      ...lastBadgeDebugState,
+      permissionGranted: requestedPermissions.granted,
+    };
     return requestedPermissions.granted;
   }
 
@@ -75,6 +97,10 @@ async function ensureBadgePermissionAsync() {
   const currentPermissions = await Notifications.getPermissionsAsync();
 
   if (currentPermissions.granted || currentPermissions.ios?.allowsBadge) {
+    lastBadgeDebugState = {
+      ...lastBadgeDebugState,
+      permissionGranted: true,
+    };
     return true;
   }
 
@@ -91,6 +117,11 @@ async function ensureBadgePermissionAsync() {
       allowSound: false,
     },
   });
+
+  lastBadgeDebugState = {
+    ...lastBadgeDebugState,
+    permissionGranted: requestedPermissions.granted || Boolean(requestedPermissions.ios?.allowsBadge),
+  };
 
   return requestedPermissions.granted || Boolean(requestedPermissions.ios?.allowsBadge);
 }
@@ -114,7 +145,10 @@ async function syncAndroidBadgeNotificationAsync(badgeCount: number) {
   }
 
   configureAndroidNotificationHandler();
-  await ensureAndroidBadgeChannelAsync();
+  lastBadgeDebugState = {
+    ...lastBadgeDebugState,
+    channelReady: await ensureAndroidBadgeChannelAsync(),
+  };
   await clearAndroidBadgeNotificationAsync();
 
   if (badgeCount <= 0) {
@@ -140,6 +174,10 @@ async function syncAndroidBadgeNotificationAsync(badgeCount: number) {
   });
 
   await AsyncStorage.setItem(ANDROID_BASKET_BADGE_NOTIFICATION_STORAGE_KEY, notificationId);
+  lastBadgeDebugState = {
+    ...lastBadgeDebugState,
+    fallbackNotificationSet: true,
+  };
   return true;
 }
 
@@ -147,6 +185,16 @@ export async function syncPendingItemsBadgeCountAsync(pendingItemsCount: number)
   const badgeCount = normalizeBadgeCount(pendingItemsCount);
 
   try {
+    lastBadgeDebugState = {
+      badgeCount,
+      directBadgeSet: false,
+      fallbackNotificationSet: false,
+      permissionGranted: badgeCount <= 0,
+      channelReady: Platform.OS !== 'android',
+      platform: Platform.OS,
+      updatedAt: new Date().toISOString(),
+    };
+
     if (badgeCount > 0 || Platform.OS === 'android') {
       const canSetBadge = await ensureBadgePermissionAsync();
 
@@ -156,6 +204,10 @@ export async function syncPendingItemsBadgeCountAsync(pendingItemsCount: number)
     }
 
     const directBadgeSet = await Notifications.setBadgeCountAsync(badgeCount);
+    lastBadgeDebugState = {
+      ...lastBadgeDebugState,
+      directBadgeSet,
+    };
 
     if (Platform.OS === 'android') {
       if (badgeCount <= 0) {
@@ -176,4 +228,21 @@ export async function syncPendingItemsBadgeCountAsync(pendingItemsCount: number)
 
     return false;
   }
+}
+
+export async function getAppIconBadgeDebugInfoAsync(pendingItemsCount: number) {
+  const result = await syncPendingItemsBadgeCountAsync(pendingItemsCount);
+  const currentPermissions = await Notifications.getPermissionsAsync();
+  const androidChannel =
+    Platform.OS === 'android'
+      ? await Notifications.getNotificationChannelAsync(ANDROID_BASKET_BADGE_CHANNEL_ID)
+      : null;
+
+  return {
+    ...lastBadgeDebugState,
+    result,
+    permissionStatus: currentPermissions.status,
+    androidImportance: androidChannel?.importance ?? null,
+    androidShowBadge: androidChannel?.showBadge ?? null,
+  };
 }

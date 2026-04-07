@@ -31,6 +31,7 @@ import {
   SectionCard,
 } from '@/shared/ui';
 import { openAdsPrivacyOptions, supportsAdsPrivacyOptions } from '@/shared/ads';
+import { getAppIconBadgeDebugInfoAsync } from '@/shared/notifications';
 
 export default function HouseholdScreen() {
   const theme = useTheme();
@@ -74,6 +75,8 @@ export default function HouseholdScreen() {
       : ''
   );
   const [isOpeningAdChoices, setIsOpeningAdChoices] = React.useState(false);
+  const [badgeDebugInfo, setBadgeDebugInfo] = React.useState<string | null>(null);
+  const [isCheckingBadge, setIsCheckingBadge] = React.useState(false);
   const handleOpenAdChoices = React.useCallback(async () => {
     setIsOpeningAdChoices(true);
 
@@ -83,6 +86,31 @@ export default function HouseholdScreen() {
       setIsOpeningAdChoices(false);
     }
   }, []);
+  const handleCheckBadge = React.useCallback(async () => {
+    if (!snapshot) {
+      return;
+    }
+
+    setIsCheckingBadge(true);
+
+    try {
+      const pendingItemsCount = snapshot.items.filter((item) => item.status === 'pending').length;
+      const info = await getAppIconBadgeDebugInfoAsync(pendingItemsCount);
+      setBadgeDebugInfo(
+        [
+          `Pending items: ${info.badgeCount}`,
+          `Permission: ${info.permissionStatus}`,
+          `API result: ${info.result ? 'accepted' : 'not accepted'}`,
+          `Direct badge: ${info.directBadgeSet ? 'yes' : 'no'}`,
+          `Fallback notification: ${info.fallbackNotificationSet ? 'yes' : 'no'}`,
+          `Android channel badge: ${info.androidShowBadge === null ? 'n/a' : info.androidShowBadge ? 'yes' : 'no'}`,
+          `Updated: ${info.updatedAt || 'n/a'}`,
+        ].join('\n')
+      );
+    } finally {
+      setIsCheckingBadge(false);
+    }
+  }, [snapshot]);
 
   React.useEffect(() => {
     setBudgetCycleAnchorDayInput(String(budgetCycleAnchorDay));
@@ -434,6 +462,25 @@ export default function HouseholdScreen() {
           </View>
         </SectionCard>
       ) : null}
+
+      <SectionCard
+        title="App icon badge"
+        description="Check whether this device is accepting the pending-item badge count for the launcher icon. Android badge display can still depend on Samsung launcher settings.">
+        <Text style={[styles.supportText, { color: theme.textMuted }]}>
+          Home Basket tries to show the number of items still to buy on the app icon when the launcher allows it.
+        </Text>
+        <View style={styles.actionRow}>
+          <ActionButton
+            label={isCheckingBadge ? 'Checking badge...' : 'Test badge count'}
+            tone="secondary"
+            onPress={() => void handleCheckBadge()}
+            disabled={isSaving || isCheckingBadge}
+          />
+        </View>
+        {badgeDebugInfo ? (
+          <Text style={[styles.debugText, { color: theme.textMuted }]}>{badgeDebugInfo}</Text>
+        ) : null}
+      </SectionCard>
 
       <SectionCard
         title="Acting member"
@@ -1035,5 +1082,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 15,
     lineHeight: 22,
+  },
+  debugText: {
+    fontFamily: Fonts.mono,
+    fontSize: 12,
+    lineHeight: 18,
   },
 });
