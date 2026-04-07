@@ -1,46 +1,60 @@
 # Store Listing Copy
 
-These are draft launch assets for an Android-first MVP.
+Paste-ready launch copy for the first Home Basket store submissions.
 
-## App name options
+## Google Play Console
 
-- Home Basket
-- Home Basket: Shared Shopping
-- Home Basket: Shared List
+### App name
 
-Recommended:
+```text
+Home Basket
+```
 
-- Home Basket
+### Short description
 
-## Google Play short description
+```text
+Shared shopping list, purchases, reminders, and monthly budgets.
+```
 
-Shared household shopping, reminders, purchases, and payday budgets.
+This stays under Google Play's 80-character short-description limit.
 
-## Google Play full description
+### Full description
 
-Home Basket helps households stay in sync while shopping.
+```text
+Home Basket helps households keep one shared shopping list, purchase history, and monthly budget rhythm in sync.
 
-Create one shared household, invite family members or helpers, and keep everyone aligned on what still needs to be bought. Add items fast, mark them as bought while shopping, and save completed purchases with receipt proof and total spend.
+Create a household, invite family members, roommates, or helpers, and keep everyone aligned on what still needs to be bought. Add items quickly, mark them as bought while shopping, and record purchases with receipt proof when the basket is closed.
 
-Home Basket is built for real home use:
+Home Basket is built for everyday household coordination:
 
 - Shared shopping list for the whole household
 - Fast item add, edit, remove, and mark-bought flow
-- Purchase history with optional receipt attachments
-- Recurring reminders for staples
-- Payday-based budget cycle tracking
-- Optional household budget
-- Works across Android, web, and future iOS expansion from the same product base
+- Purchases for in-store, online, and delivery orders
+- Optional receipt photo attachments
+- Recurring reminders for household staples
+- Monthly budget tracking based on your pay-day cycle
+- Household invite codes for trusted members
+- Works across Android, web, and iPhone
 
-Whether you shop in person, order online, or use delivery apps, Home Basket helps the household stay organized without the app feeling heavy.
+Use Home Basket for groceries, toiletries, cleaning supplies, pet items, gardening, and other shared household needs.
 
-## Promo lines
+Whether you shop in person, order online, or use delivery services, Home Basket helps everyone know what is needed, what was bought, and how the household is tracking for the month.
+```
 
-- One basket for the whole household.
-- Shared shopping without the chaos.
-- Track what was bought, by who, and when.
+### Category
 
-## Keywords and themes
+Recommended:
+
+- `Shopping`
+
+Good alternatives if Google Play suggestions feel better in-console:
+
+- `Lifestyle`
+- `Productivity`
+
+### Tags and keyword themes
+
+Use these as guidance when Play Console asks for app tags or when writing localized variants:
 
 - shared shopping list
 - household shopping
@@ -48,30 +62,88 @@ Whether you shop in person, order online, or use delivery apps, Home Basket help
 - roommate shopping list
 - purchase tracker
 - receipt tracker
-- pantry reminders
-- budget cycle
+- grocery reminders
+- monthly budget
+- household budget
 
-## Screenshot headlines
+### Release notes
 
-- Shared shopping for the whole household
-- Add items fast and keep everyone aligned
-- Record purchases with receipt proof
-- Track spend by payday cycle
-- Bring recurring staples back in one tap
+```text
+Home Basket launches with a shared household shopping list, purchase history, receipt attachments, recurring reminders, invite codes, and monthly budget tracking by pay-day cycle.
+```
 
-## Release notes for version 1.0
+## Play Store Assets
 
-- Launch of Home Basket MVP
-- Shared household list with live sync
-- Purchases with receipt attachments
-- Payday-based cycle budgeting
-- Household reminders and recurring staples
+### App icon
 
-## Support contact
+Use:
 
-- Support email: gabriel@transcripe.com
-- Website: https://homebasketapp.com
-- Privacy policy URL: https://homebasketapp.com/privacy
-- Terms URL: https://homebasketapp.com/terms
-- Support URL: https://homebasketapp.com/support
-- Account deletion URL: https://homebasketapp.com/delete-account
+```text
+assets/brand/homebasket_appicon.png
+```
+
+### Feature graphic
+
+Use:
+
+```text
+branding/play-store/feature_graphic.jpg
+```
+
+This is the Play-safe JPEG export at `1024 x 500`.
+
+### Phone screenshot order
+
+Use the final Android screenshot set in this order:
+
+1. Welcome / onboarding
+2. Dashboard / overview
+3. Active basket
+4. Purchases with receipt proof
+5. Household and invite
+6. Reminders
+
+Recommended screenshot captions:
+
+- `Shared shopping list for the whole household`
+- `Add items fast and keep everyone aligned`
+- `Mark items bought while you shop`
+- `Record purchases with receipt proof`
+- `Track spending by pay-day cycle`
+- `Bring recurring staples back in one tap`
+
+## Public URLs
+
+Use these in store forms:
+
+- Website: `https://homebasketapp.com`
+- Privacy policy: `https://homebasketapp.com/privacy`
+- Terms: `https://homebasketapp.com/terms`
+- Support: `https://homebasketapp.com/support`
+- Account deletion: `https://homebasketapp.com/delete-account`
+
+## Support Contact
+
+- Support email: `gabriel@transcripe.com`
+- Publisher: `Transcripe`
+
+## Apple App Store Adaptation
+
+Use the same product wording as Google Play, with this subtitle-style line:
+
+```text
+Shared household shopping list
+```
+
+Suggested promotional text:
+
+```text
+Keep household shopping, purchases, reminders, and monthly budget tracking in one shared place.
+```
+
+## Official Limits Checked
+
+- Google Play app name: up to `30` characters
+- Google Play short description: up to `80` characters
+- Google Play full description: up to `4,000` characters
+- Google Play feature graphic: `1024 x 500`, JPEG or 24-bit PNG with no alpha

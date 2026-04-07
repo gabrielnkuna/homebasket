@@ -12,38 +12,41 @@ For the full art direction and prompts, use [play-store-creative-brief.md](./pla
   Good source for Play icon export
 
 - Feature graphic
-  Recommended dedicated asset still needed
+  Current final asset: `branding/play-store/feature_graphic.jpg`
   Required format: `JPEG` or `24-bit PNG`, no alpha
   Required size: `1024x500`
-  Suggested filename: `branding/play-store/homebasket-feature-graphic.png`
+  Current status: ready for upload
 
 - Phone screenshots
   Capture at least `2`
-  Recommended set for MVP: `5 to 8`
-  Recommended export for Home Basket: `1080x2400 PNG`
+  Recommended set for MVP: `6`
+  Current Android export size: `1080x1920 PNG`
+  Current status: ready for upload from `branding/play-store/`
 
 Suggested screenshot flow:
 
 1. Onboarding with create or join choice
-2. Shared list with branded header
-3. Add item flow with categories
-4. Purchase recording with receipt proof
-5. Household pay-day cycle budget
-6. Reminders or purchase history
+2. Dashboard / overview
+3. Active basket
+4. Purchases with receipt proof
+5. Household and invite
+6. Reminders
 
 ## Strong MVP screenshot headlines
 
-- Shared shopping for the whole household
+- Shared shopping list for the whole household
 - Add items quickly and stay in sync
+- Mark items bought while you shop
 - Record purchases with receipt proof
 - Track spending by pay-day cycle
 - Bring recurring staples back in one tap
 
 ## Store text limits to keep in mind
 
-- App title: keep it short and readable
-- Short description: one-line value proposition
-- Full description: explain household value, shared sync, reminders, and purchases
+- App name: `30` characters max
+- Short description: `80` characters max
+- Full description: `4,000` characters max
+- Current paste-ready copy: [store-listing-copy.md](./store-listing-copy.md)
 
 ## Asset quality checklist
 
@@ -67,3 +70,4 @@ Suggested screenshot flow:
 
 - Expo Android production build: https://docs.expo.dev/tutorial/eas/android-production-build
 - Google Play Data safety: https://support.google.com/googleplay/android-developer/answer/10787469
+- Google Play preview assets: https://support.google.com/googleplay/android-developer/answer/9866151
