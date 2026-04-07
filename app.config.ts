@@ -19,13 +19,14 @@ function getConfiguredAdMobAppId(platform: 'android' | 'ios') {
   const sampleAppId =
     platform === 'android' ? SAMPLE_ADMOB_ANDROID_APP_ID : SAMPLE_ADMOB_IOS_APP_ID;
   const profile = process.env.EAS_BUILD_PROFILE ?? '';
+  const buildPlatform = process.env.EAS_BUILD_PLATFORM;
   const configuredAppId = process.env[envName];
 
   if (configuredAppId) {
     return configuredAppId;
   }
 
-  if (profile === 'production') {
+  if (profile === 'production' && (!buildPlatform || buildPlatform === platform)) {
     throw new Error(
       `Missing ${envName}. Add your real AdMob app IDs before creating a production mobile build.`
     );
