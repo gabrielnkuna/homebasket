@@ -49,6 +49,11 @@ Likely data collected by the current app:
 - Device or other identifiers
   - Firebase/Auth identifiers, and ad-related identifiers when mobile ads are enabled
 
+Notification and badge behavior:
+
+- Home Basket may request badge permission on iPhone so the app icon can show the number of items still to be bought.
+- Home Basket does not use this badge feature for marketing push notifications.
+
 Likely data sharing to disclose when ads are enabled:
 
 - Ad-related SDK data sharing for advertising, fraud prevention, and measurement through Google Mobile Ads SDK

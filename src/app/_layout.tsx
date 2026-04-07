@@ -20,15 +20,19 @@ import { BrandHero, ScreenShell, SectionCard } from '@/shared/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { HOME_BASKET_ROUTES } from '@/shared/config/app-links';
 import { initializeAdsAsync } from '@/shared/ads';
+import { syncPendingItemsBadgeCountAsync } from '@/shared/notifications';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const pathname = usePathname();
   const initialize = useHomeBasketStore((state) => state.initialize);
   const session = useHomeBasketStore((state) => state.session);
+  const snapshot = useHomeBasketStore((state) => state.snapshot);
   const isReady = useHomeBasketStore((state) => state.isReady);
   const isBootstrapping = useHomeBasketStore((state) => state.isBootstrapping);
   const themeMode = colorScheme === 'dark' ? 'dark' : 'light';
+  const pendingItemsCount =
+    session && snapshot ? snapshot.items.filter((item) => item.status === 'pending').length : 0;
   const isPublicInfoRoute =
     pathname === HOME_BASKET_ROUTES.privacy ||
     pathname === HOME_BASKET_ROUTES.terms ||
@@ -63,6 +67,14 @@ export default function RootLayout() {
 
     void initializeAdsAsync();
   }, [isPublicInfoRoute]);
+
+  useEffect(() => {
+    if (isPublicInfoRoute || !isReady || isBootstrapping) {
+      return;
+    }
+
+    void syncPendingItemsBadgeCountAsync(pendingItemsCount);
+  }, [isBootstrapping, isPublicInfoRoute, isReady, pendingItemsCount]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

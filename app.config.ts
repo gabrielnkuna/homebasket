@@ -40,8 +40,15 @@ const filteredPlugins = (baseExpoConfig.plugins ?? []).filter(
     !isPluginEntry(entry, 'expo-build-properties')
 );
 
+const notificationPlugin = filteredPlugins.some((entry: unknown) =>
+  isPluginEntry(entry, 'expo-notifications')
+)
+  ? []
+  : ['expo-notifications'];
+
 const configuredPlugins = [
   ...filteredPlugins,
+  ...notificationPlugin,
   [
     'react-native-google-mobile-ads',
     {
