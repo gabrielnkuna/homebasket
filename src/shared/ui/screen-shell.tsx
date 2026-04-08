@@ -44,6 +44,7 @@ export function ScreenShell({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const scrollRef = React.useRef<ScrollView | null>(null);
+  const hasFloatingAd = swipeNavigationEnabled && Platform.OS !== 'web';
 
   const topPadding = Platform.select({
     web: Spacing.seven,
@@ -52,7 +53,7 @@ export function ScreenShell({
 
   const bottomPadding = Platform.select({
     web: Spacing.seven,
-    default: insets.bottom + Spacing.six + Spacing.seven,
+    default: insets.bottom + Spacing.six + Spacing.seven + (hasFloatingAd ? 96 : 0),
   });
 
   const keyboardAvoidingBehavior = Platform.select({
@@ -125,8 +126,6 @@ export function ScreenShell({
           </View>
         </View>
 
-        {swipeNavigationEnabled ? <MobileBannerAd /> : null}
-
         <View style={styles.sectionStack}>{children}</View>
         <WebFooter />
       </View>
@@ -138,6 +137,18 @@ export function ScreenShell({
       style={[styles.keyboardRoot, { backgroundColor: theme.background }]}
       behavior={keyboardAvoidingBehavior}>
       {content}
+      {hasFloatingAd ? (
+        <View
+          pointerEvents="box-none"
+          style={[
+            styles.floatingAdDock,
+            {
+              bottom: insets.bottom + Spacing.two,
+            },
+          ]}>
+          <MobileBannerAd />
+        </View>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -213,5 +224,12 @@ const styles = StyleSheet.create({
   },
   sectionStack: {
     gap: Spacing.five,
+  },
+  floatingAdDock: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacing.three,
+    alignItems: 'center',
   },
 });

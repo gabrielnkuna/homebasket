@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Radii, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Radii, Shadows, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { getBannerAdUnitId, supportsMobileAdsOnThisDevice } from './admob-config';
@@ -50,6 +50,7 @@ export function MobileBannerAd() {
     <View
       style={[
         styles.bannerCard,
+        Shadows.card,
         {
           backgroundColor: theme.surface,
           borderColor: theme.border,
@@ -66,11 +67,13 @@ export function MobileBannerAd() {
 
 const styles = StyleSheet.create({
   bannerCard: {
-    alignSelf: 'stretch',
+    width: '100%',
+    maxWidth: MaxContentWidth,
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: Radii.medium,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.two,
+    borderRadius: Radii.large,
+    overflow: 'hidden',
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.one,
   },
 });
