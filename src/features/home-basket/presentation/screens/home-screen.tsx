@@ -514,7 +514,7 @@ export default function HomeScreen() {
       title={snapshot.household.name}
       swipeNavigationEnabled
       scrollToTopSignal={shouldFocusNotice ? notice : null}
-      subtitle="Add items quickly, mark them as bought while you shop, and move completed items into purchase history only when the basket is closed.">
+      subtitle="Add items, mark them bought, and close them into purchase history when ready.">
       <View style={styles.metricGrid}>
         <MetricCard
           label="Still to buy"

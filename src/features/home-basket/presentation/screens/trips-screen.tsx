@@ -126,7 +126,7 @@ export default function TripsScreen() {
       eyebrow="Purchases"
       title="Record a purchase"
       swipeNavigationEnabled
-      subtitle="Record what was bought once the order or checkout is done. Bought items move into history, and you can also log ad hoc purchases with a receipt even when nothing was pre-added to the list.">
+      subtitle="Record bought items, ad hoc purchases, and optional receipt proof.">
       <View style={styles.metricGrid}>
         <MetricCard
           label="Cycle spend"
@@ -609,11 +609,14 @@ export default function TripsScreen() {
                 {trip.purchasedItems.length > 0 ? (
                   <View style={styles.receiptItemList}>
                     {trip.purchasedItems.slice(0, 6).map((item) => (
-                      <Text
-                        key={`${trip.id}-${item.id}`}
-                        style={[styles.tripItems, { color: theme.textMuted }]}>
-                        {item.name} - {item.quantity} - {item.category}
-                      </Text>
+                      <View key={`${trip.id}-${item.id}`} style={styles.historyItemRow}>
+                        <Text style={[styles.historyItemName, { color: theme.text }]}>
+                          {item.name}
+                        </Text>
+                        <Text style={[styles.tripItems, { color: theme.textMuted }]}>
+                          Qty {item.quantity} - {item.category}
+                        </Text>
+                      </View>
                     ))}
                     {trip.purchasedItems.length > 6 ? (
                       <Text style={[styles.tripItems, { color: theme.textMuted }]}>
@@ -855,6 +858,14 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 14,
     lineHeight: 22,
+  },
+  historyItemRow: {
+    gap: 2,
+  },
+  historyItemName: {
+    fontFamily: Fonts.sans,
+    fontSize: 14,
+    fontWeight: '800',
   },
   receiptHistoryCard: {
     borderWidth: 1,
