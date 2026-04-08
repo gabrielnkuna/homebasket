@@ -26,6 +26,7 @@ type ScreenShellProps = {
   headerAccessory?: ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
   swipeNavigationEnabled?: boolean;
+  scrollToTopSignal?: string | number | null;
 };
 
 export function ScreenShell({
@@ -38,9 +39,11 @@ export function ScreenShell({
   headerAccessory,
   contentStyle,
   swipeNavigationEnabled = false,
+  scrollToTopSignal = null,
 }: ScreenShellProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const scrollRef = React.useRef<ScrollView | null>(null);
 
   const topPadding = Platform.select({
     web: Spacing.seven,
@@ -58,8 +61,21 @@ export function ScreenShell({
     default: undefined,
   });
 
+  React.useEffect(() => {
+    if (!scrollToTopSignal) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [scrollToTopSignal]);
+
   const content = (
     <ScrollView
+      ref={scrollRef}
       style={styles.scroll}
       keyboardShouldPersistTaps="always"
       keyboardDismissMode="none"

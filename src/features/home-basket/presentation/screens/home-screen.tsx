@@ -208,6 +208,9 @@ export default function HomeScreen() {
   const selectedMember = model.selectedMember;
   const hasBudget = snapshot.household.monthlyBudgetCents > 0;
   const hasBasketItems = snapshot.items.length > 0;
+  const shouldFocusNotice =
+    notice?.includes('added back to the basket') ||
+    notice?.includes('already reflected on the active basket');
 
   const activeBasketSection = (
     <SectionCard
@@ -510,6 +513,7 @@ export default function HomeScreen() {
       eyebrow="Shared household list"
       title={snapshot.household.name}
       swipeNavigationEnabled
+      scrollToTopSignal={shouldFocusNotice ? notice : null}
       subtitle="Add items quickly, mark them as bought while you shop, and move completed items into purchase history only when the basket is closed.">
       <View style={styles.metricGrid}>
         <MetricCard

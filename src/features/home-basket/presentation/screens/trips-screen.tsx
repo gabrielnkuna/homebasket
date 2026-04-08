@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 
 import { Fonts, Radii, Spacing } from '@/constants/theme';
@@ -27,11 +28,13 @@ import { showInterstitialAdIfReady } from '@/shared/ads';
 
 export default function TripsScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const receiptAnalysisCapabilities = getReceiptAnalysisCapabilities({
     standardReadAvailable: canAnalyzeReceipts,
   });
   const snapshot = useHomeBasketStore((state) => state.snapshot);
   const selectedMemberId = useHomeBasketStore((state) => state.selectedMemberId);
+  const setFilter = useHomeBasketStore((state) => state.setFilter);
   const setSelectedMember = useHomeBasketStore((state) => state.setSelectedMember);
   const tripDraft = useHomeBasketStore((state) => state.tripDraft);
   const updateTripDraft = useHomeBasketStore((state) => state.updateTripDraft);
@@ -61,6 +64,19 @@ export default function TripsScreen() {
       await showInterstitialAdIfReady();
     }
   }, [completeTrip]);
+  const handleAddTripItemsBackToBasket = React.useCallback(
+    async (tripId: string) => {
+      setFilter('all');
+      await addTripItemsBackToBasket(tripId);
+
+      const latestState = useHomeBasketStore.getState();
+
+      if (!latestState.error) {
+        router.replace('/');
+      }
+    },
+    [addTripItemsBackToBasket, router, setFilter]
+  );
 
   if (!snapshot) {
     return (
@@ -613,7 +629,7 @@ export default function TripsScreen() {
                   <ActionButton
                     label={`Add back as ${selectedMember.name}`}
                     tone="secondary"
-                    onPress={() => void addTripItemsBackToBasket(trip.id)}
+                    onPress={() => void handleAddTripItemsBackToBasket(trip.id)}
                     disabled={isSaving}
                   />
                 ) : null}
