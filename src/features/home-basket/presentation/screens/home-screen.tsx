@@ -231,7 +231,9 @@ export default function HomeScreen() {
       ) : (
         model.groupedItems.map((group) => (
           <View key={group.category} style={styles.groupBlock}>
-            <Text style={[styles.groupTitle, { color: theme.text }]}>{group.category}</Text>
+            <Text style={[styles.groupTitle, { color: theme.primaryStrong }]}>
+              {group.category}
+            </Text>
 
             {group.items.map((item) => {
               const addedBy = snapshot.members.find((member) => member.id === item.addedByMemberId);
@@ -733,9 +735,11 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   groupTitle: {
-    fontFamily: Fonts.rounded,
-    fontSize: 18,
+    fontFamily: Fonts.sans,
+    fontSize: 13,
     fontWeight: '800',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
   },
   itemRow: {
     borderWidth: 1,

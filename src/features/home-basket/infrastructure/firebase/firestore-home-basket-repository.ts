@@ -425,7 +425,7 @@ export function createFirestoreHomeBasketRepository(
         totalSpendCents: input.totalSpendCents,
         completedAt: new Date().toISOString(),
         purchasedItems: finalPurchasedItems,
-        receipt,
+        ...(receipt ? { receipt } : {}),
         ...buildOptionalNote(input.note),
       });
 

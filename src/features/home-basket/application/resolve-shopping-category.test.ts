@@ -14,6 +14,7 @@ describe('resolveShoppingCategory', () => {
 
   it('normalizes custom categories into title case', () => {
     expect(resolveShoppingCategory('Other', ' gardening supplies ')).toBe('Gardening Supplies');
+    expect(resolveShoppingCategory('Produce', ' fruits ')).toBe('Fruits');
   });
 
   it('falls back to Other when no usable value is provided', () => {

@@ -158,6 +158,27 @@ export function normalizeShoppingCategoryLabel(value: string) {
     .join(' ');
 }
 
+export function normalizeCustomShoppingCategoryLabel(value: string) {
+  const trimmedValue = value.trim().replace(/\s+/g, ' ');
+
+  if (!trimmedValue) {
+    return '';
+  }
+
+  const canonicalCategory = shoppingCategories.find(
+    (category) => category.toLowerCase() === trimmedValue.toLowerCase()
+  );
+
+  if (canonicalCategory) {
+    return canonicalCategory;
+  }
+
+  return trimmedValue
+    .split(' ')
+    .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1).toLowerCase()}`)
+    .join(' ');
+}
+
 export function inferShoppingCategoryFromText(value: string): ShoppingCategory {
   const trimmedValue = value.trim();
 
@@ -178,7 +199,7 @@ export function resolveShoppingCategory(
   selectedCategory: ShoppingCategory,
   customCategory?: string
 ): ShoppingCategory {
-  const normalizedCustomCategory = normalizeShoppingCategoryLabel(customCategory ?? '');
+  const normalizedCustomCategory = normalizeCustomShoppingCategoryLabel(customCategory ?? '');
 
   if (normalizedCustomCategory) {
     return normalizedCustomCategory;

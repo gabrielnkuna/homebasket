@@ -10,7 +10,10 @@ import {
   formatOrdinalDay,
   normalizeBudgetCycleAnchorDay,
 } from '@/features/home-basket/application/budget-cycle';
-import { resolveShoppingCategory } from '@/features/home-basket/application/resolve-shopping-category';
+import {
+  normalizeCustomShoppingCategoryLabel,
+  resolveShoppingCategory,
+} from '@/features/home-basket/application/resolve-shopping-category';
 import { buildTripItemsBackToBasketInput } from '@/features/home-basket/application/re-add-trip-items';
 import {
   createTripPurchasedItemDraft,
@@ -1431,7 +1434,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
       await homeBasketRepository.updateItem(snapshot.household.id, state.editingItemId, {
         name: state.itemEditDraft.name,
         quantity: state.itemEditDraft.quantity,
-        category: resolveShoppingCategory(state.itemEditDraft.category),
+        category: normalizeCustomShoppingCategoryLabel(state.itemEditDraft.category) || 'Other',
       });
       set({
         isSaving: false,
