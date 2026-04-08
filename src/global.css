@@ -14,11 +14,16 @@ html,
 body,
 #root {
   min-height: 100%;
+  background-color: #0f1713;
 }
 
 html,
 body {
   margin: 0;
   background-color: #0f1713;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
+}
+
+#root {
+  min-height: 100dvh;
 }
