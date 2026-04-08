@@ -266,6 +266,92 @@ const POPULAR_CURRENCY_CODES = [
   'AED',
 ];
 
+const TIME_ZONE_TO_REGION: Record<string, string> = {
+  'Africa/Cairo': 'EG',
+  'Africa/Casablanca': 'MA',
+  'Africa/Accra': 'GH',
+  'Africa/Addis_Ababa': 'ET',
+  'Africa/Algiers': 'DZ',
+  'Africa/Gaborone': 'BW',
+  'Africa/Johannesburg': 'ZA',
+  'Africa/Khartoum': 'SD',
+  'Africa/Kigali': 'RW',
+  'Africa/Lagos': 'NG',
+  'Africa/Maputo': 'MZ',
+  'Africa/Maseru': 'LS',
+  'Africa/Mbabane': 'SZ',
+  'Africa/Nairobi': 'KE',
+  'Africa/Windhoek': 'NA',
+  'America/Anchorage': 'US',
+  'America/Argentina/Buenos_Aires': 'AR',
+  'America/Asuncion': 'PY',
+  'America/Bogota': 'CO',
+  'America/Caracas': 'VE',
+  'America/Chicago': 'US',
+  'America/Denver': 'US',
+  'America/Guatemala': 'GT',
+  'America/Los_Angeles': 'US',
+  'America/Lima': 'PE',
+  'America/Mexico_City': 'MX',
+  'America/New_York': 'US',
+  'America/Panama': 'PA',
+  'America/Phoenix': 'US',
+  'America/Puerto_Rico': 'PR',
+  'America/Santiago': 'CL',
+  'America/Sao_Paulo': 'BR',
+  'America/St_Johns': 'CA',
+  'America/Toronto': 'CA',
+  'America/Vancouver': 'CA',
+  'Asia/Almaty': 'KZ',
+  'Asia/Bangkok': 'TH',
+  'Asia/Dhaka': 'BD',
+  'Asia/Dubai': 'AE',
+  'Asia/Hong_Kong': 'HK',
+  'Asia/Jakarta': 'ID',
+  'Asia/Jerusalem': 'IL',
+  'Asia/Kolkata': 'IN',
+  'Asia/Kuala_Lumpur': 'MY',
+  'Asia/Manila': 'PH',
+  'Asia/Qatar': 'QA',
+  'Asia/Riyadh': 'SA',
+  'Asia/Seoul': 'KR',
+  'Asia/Shanghai': 'CN',
+  'Asia/Singapore': 'SG',
+  'Asia/Tokyo': 'JP',
+  'Asia/Taipei': 'TW',
+  'Asia/Tbilisi': 'GE',
+  'Asia/Tehran': 'IR',
+  'Asia/Yerevan': 'AM',
+  'Australia/Adelaide': 'AU',
+  'Australia/Brisbane': 'AU',
+  'Australia/Darwin': 'AU',
+  'Australia/Hobart': 'AU',
+  'Australia/Melbourne': 'AU',
+  'Australia/Perth': 'AU',
+  'Australia/Sydney': 'AU',
+  'Europe/Amsterdam': 'NL',
+  'Europe/Athens': 'GR',
+  'Europe/Berlin': 'DE',
+  'Europe/Brussels': 'BE',
+  'Europe/Dublin': 'IE',
+  'Europe/Helsinki': 'FI',
+  'Europe/Istanbul': 'TR',
+  'Europe/Kyiv': 'UA',
+  'Europe/London': 'GB',
+  'Europe/Madrid': 'ES',
+  'Europe/Moscow': 'RU',
+  'Europe/Oslo': 'NO',
+  'Europe/Paris': 'FR',
+  'Europe/Prague': 'CZ',
+  'Europe/Rome': 'IT',
+  'Europe/Stockholm': 'SE',
+  'Europe/Warsaw': 'PL',
+  'Europe/Zurich': 'CH',
+  'Pacific/Auckland': 'NZ',
+  'Pacific/Fiji': 'FJ',
+  'Pacific/Honolulu': 'US',
+};
+
 function canConstructLocale(locale: string) {
   return typeof Intl !== 'undefined' && typeof Intl.Locale === 'function' && !!locale;
 }
@@ -290,6 +376,14 @@ export function getDeviceLocale() {
   }
 
   return FALLBACK_LOCALE;
+}
+
+export function getDeviceTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function getRegionFromLocale(locale = getDeviceLocale()) {
@@ -317,7 +411,21 @@ export function resolveCurrencyCodeFromRegion(region: string | null) {
   return REGION_TO_CURRENCY[region.toUpperCase()] ?? null;
 }
 
-export function getDeviceCurrencyCode(locale = getDeviceLocale()) {
+export function resolveRegionFromTimeZone(timeZone: string | null) {
+  if (!timeZone) {
+    return null;
+  }
+
+  return TIME_ZONE_TO_REGION[timeZone] ?? null;
+}
+
+export function getDeviceCurrencyCode(locale = getDeviceLocale(), timeZone = getDeviceTimeZone()) {
+  const timeZoneCurrencyCode = resolveCurrencyCodeFromRegion(resolveRegionFromTimeZone(timeZone));
+
+  if (timeZoneCurrencyCode) {
+    return timeZoneCurrencyCode;
+  }
+
   return resolveCurrencyCodeFromRegion(getRegionFromLocale(locale));
 }
 
@@ -356,8 +464,8 @@ export function coerceCurrencyCode(value: unknown, fallback = FALLBACK_CURRENCY_
   return isSupportedCurrencyCode(candidate) ? candidate : fallback;
 }
 
-export function getDefaultCurrencyCode(locale = getDeviceLocale()) {
-  return getDeviceCurrencyCode(locale) ?? FALLBACK_CURRENCY_CODE;
+export function getDefaultCurrencyCode(locale = getDeviceLocale(), timeZone = getDeviceTimeZone()) {
+  return getDeviceCurrencyCode(locale, timeZone) ?? FALLBACK_CURRENCY_CODE;
 }
 
 export function getSuggestedCurrencyCodes(preferredCurrencyCode?: string | null) {
