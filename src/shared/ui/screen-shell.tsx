@@ -96,30 +96,6 @@ export function ScreenShell({
     default: undefined,
   });
 
-  React.useEffect(() => {
-    if (!scrollToTopSignal) {
-      return;
-    }
-
-    const frame = requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({ y: 0, animated: true });
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [scrollToTopSignal]);
-
-  React.useEffect(() => {
-    if (!scrollToBottomSignal) {
-      return;
-    }
-
-    const frame = requestAnimationFrame(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [scrollToBottomSignal]);
-
   const scrollToFloatingActionTarget = React.useCallback(() => {
     const target = floatingAction?.scrollTargetRef?.current;
     const scrollView = scrollRef.current;
@@ -155,6 +131,48 @@ export function ScreenShell({
       return false;
     }
   }, [floatingAction]);
+
+  React.useEffect(() => {
+    if (!scrollToTopSignal) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [scrollToTopSignal]);
+
+  React.useEffect(() => {
+    if (!scrollToBottomSignal) {
+      return;
+    }
+
+    const retryDelays = floatingAction?.scrollTargetRef
+      ? Platform.select({ web: [0], default: [120, 320, 560] }) ?? [0]
+      : [0];
+    const frames: number[] = [];
+    const timers = retryDelays.map((delay, index) =>
+      setTimeout(() => {
+        const frame = requestAnimationFrame(() => {
+          const didScrollToTarget = scrollToFloatingActionTarget();
+          const isLastAttempt = index === retryDelays.length - 1;
+
+          if (!didScrollToTarget && isLastAttempt) {
+            scrollRef.current?.scrollToEnd({ animated: true });
+          }
+        });
+
+        frames.push(frame);
+      }, delay)
+    );
+
+    return () => {
+      timers.forEach(clearTimeout);
+      frames.forEach(cancelAnimationFrame);
+    };
+  }, [floatingAction?.scrollTargetRef, scrollToBottomSignal, scrollToFloatingActionTarget]);
 
   const handleFloatingActionPress = React.useCallback(() => {
     if (!floatingAction || floatingAction.disabled) {
