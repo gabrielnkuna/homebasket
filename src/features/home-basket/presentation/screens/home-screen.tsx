@@ -1,7 +1,9 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import {
+  InteractionManager,
   Keyboard,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,7 +15,6 @@ import { Fonts, Radii, Spacing } from '@/constants/theme';
 import { resolveShoppingCategory } from '@/features/home-basket/application/resolve-shopping-category';
 import {
   ShoppingCategory,
-  shoppingCategories,
   shoppingFilters,
 } from '@/features/home-basket/domain/models';
 import { buildHomeScreenModel } from '@/features/home-basket/presentation/selectors';
@@ -97,6 +98,8 @@ export default function HomeScreen() {
   const addItemNameInputRef = React.useRef<TextInput | null>(null);
   const addItemQuantityInputRef = React.useRef<TextInput | null>(null);
   const addItemCustomCategoryInputRef = React.useRef<TextInput | null>(null);
+  const addItemSectionRef = React.useRef<View | null>(null);
+  const scheduledAddItemFocusCleanupRef = React.useRef<(() => void) | null>(null);
   const [areRecurringStaplesExpanded, setAreRecurringStaplesExpanded] = React.useState(false);
   const [lastAddedItemConfirmation, setLastAddedItemConfirmation] =
     React.useState<LastAddedItemConfirmation | null>(null);
@@ -112,6 +115,47 @@ export default function HomeScreen() {
     addItemCustomCategoryInputRef.current?.blur();
     Keyboard.dismiss();
   }, []);
+
+  const scheduleAddItemNameFocus = React.useCallback((initialDelayMs = 0) => {
+    scheduledAddItemFocusCleanupRef.current?.();
+
+    if (Platform.OS === 'web') {
+      const frame = requestAnimationFrame(() => {
+        addItemNameInputRef.current?.focus();
+      });
+
+      scheduledAddItemFocusCleanupRef.current = () => cancelAnimationFrame(frame);
+      return;
+    }
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const interactionTasks: { cancel?: () => void }[] = [];
+    const retryDelays = [initialDelayMs, initialDelayMs + 180, initialDelayMs + 420];
+
+    retryDelays.forEach((delay) => {
+      const timer = setTimeout(() => {
+        const interactionTask = InteractionManager.runAfterInteractions(() => {
+          requestAnimationFrame(() => {
+            addItemNameInputRef.current?.focus();
+          });
+        });
+        interactionTasks.push(interactionTask);
+      }, delay);
+      timers.push(timer);
+    });
+
+    scheduledAddItemFocusCleanupRef.current = () => {
+      timers.forEach(clearTimeout);
+      interactionTasks.forEach((task) => task.cancel?.());
+    };
+  }, []);
+
+  React.useEffect(
+    () => () => {
+      scheduledAddItemFocusCleanupRef.current?.();
+    },
+    []
+  );
 
   const handleSetFilter = React.useCallback(
     (nextFilter: (typeof shoppingFilters)[number]) => {
@@ -206,8 +250,8 @@ export default function HomeScreen() {
 
   const handleOpenAddItemComposer = React.useCallback(() => {
     setFilter('all');
-    addItemNameInputRef.current?.focus();
-  }, [setFilter]);
+    scheduleAddItemNameFocus(Platform.OS === 'web' ? 0 : 120);
+  }, [scheduleAddItemNameFocus, setFilter]);
 
   React.useEffect(() => {
     if (!addItemRequest || !snapshotHouseholdId || snapshotMemberCount === 0) {
@@ -216,11 +260,17 @@ export default function HomeScreen() {
 
     const timeout = setTimeout(() => {
       setFilter('all');
-      addItemNameInputRef.current?.focus();
-    }, 320);
+      scheduleAddItemNameFocus(Platform.OS === 'web' ? 0 : 520);
+    }, Platform.OS === 'web' ? 120 : 260);
 
     return () => clearTimeout(timeout);
-  }, [addItemRequest, setFilter, snapshotHouseholdId, snapshotMemberCount]);
+  }, [
+    addItemRequest,
+    scheduleAddItemNameFocus,
+    setFilter,
+    snapshotHouseholdId,
+    snapshotMemberCount,
+  ]);
 
   if (!snapshot) {
     return (
@@ -332,7 +382,7 @@ export default function HomeScreen() {
                   style={[
                     styles.itemRow,
                     {
-                      backgroundColor: isBought ? theme.primarySoft : theme.surface,
+                      backgroundColor: isBought ? theme.primarySoft : theme.accentSoft,
                       borderColor: isJustAdded ? theme.accent : theme.border,
                     },
                     isJustAdded ? styles.justAddedItemRow : null,
@@ -386,7 +436,7 @@ export default function HomeScreen() {
                             <TextInput
                               value={itemEditDraft.category}
                               onChangeText={(category) => updateItemEditDraft({ category })}
-                              placeholder="Produce, Pantry, Gardening..."
+                              placeholder="Choose below or type a category..."
                               placeholderTextColor={theme.textMuted}
                               style={[
                                 styles.input,
@@ -397,6 +447,16 @@ export default function HomeScreen() {
                                 },
                               ]}
                             />
+                            <View style={styles.rowWrap}>
+                              {model.categoryOptions.map((category) => (
+                                <PillButton
+                                  key={category}
+                                  label={category}
+                                  active={itemEditDraft.category === category}
+                                  onPress={() => updateItemEditDraft({ category })}
+                                />
+                              ))}
+                            </View>
                           </View>
                         </View>
                         <Text style={[styles.itemMeta, { color: theme.textMuted }]}>
@@ -504,105 +564,107 @@ export default function HomeScreen() {
   );
 
   const addItemSection = (
-    <SectionCard
-      title="Add something fast"
-      description="The acting member is who the app credits for new shopping items.">
-      <View style={styles.rowWrap}>
-        {snapshot.members.map((member) => (
-          <PillButton
-            key={member.id}
-            label={member.name}
-            active={member.id === selectedMember.id}
-            onPress={() => handleSetSelectedMember(member.id)}
-          />
-        ))}
-      </View>
-
-      <View style={styles.formGrid}>
-        <View style={styles.gridFieldBlock}>
-          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Item name</Text>
-          <TextInput
-            ref={addItemNameInputRef}
-            value={addItemDraft.name}
-            onChangeText={(name) => updateAddItemDraft({ name })}
-            placeholder="Milk, rice, toothpaste..."
-            placeholderTextColor={theme.textMuted}
-            style={[
-              styles.input,
-              {
-                backgroundColor: theme.surface,
-                borderColor: theme.border,
-                color: theme.text,
-              },
-            ]}
-          />
-        </View>
-
-        <View style={styles.gridFieldBlock}>
-          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Quantity</Text>
-          <TextInput
-            ref={addItemQuantityInputRef}
-            value={addItemDraft.quantity}
-            onChangeText={(quantity) => updateAddItemDraft({ quantity })}
-            placeholder="1 pack"
-            placeholderTextColor={theme.textMuted}
-            style={[
-              styles.input,
-              {
-                backgroundColor: theme.surface,
-                borderColor: theme.border,
-                color: theme.text,
-              },
-            ]}
-          />
-        </View>
-      </View>
-
-      <View style={styles.fieldBlock}>
-        <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Category</Text>
+    <View ref={addItemSectionRef} collapsable={false}>
+      <SectionCard
+        title="Add something fast"
+        description="The acting member is who the app credits for new shopping items.">
         <View style={styles.rowWrap}>
-          {shoppingCategories.map((category) => (
+          {snapshot.members.map((member) => (
             <PillButton
-              key={category}
-              label={category}
-              active={addItemDraft.category === category}
-              onPress={() => updateAddItemDraft({ category, customCategory: '' })}
+              key={member.id}
+              label={member.name}
+              active={member.id === selectedMember.id}
+              onPress={() => handleSetSelectedMember(member.id)}
             />
           ))}
         </View>
-      </View>
 
-      <View style={styles.fieldBlock}>
-        <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
-          Custom category
-        </Text>
-        <TextInput
-          ref={addItemCustomCategoryInputRef}
-          value={addItemDraft.customCategory}
-          onChangeText={(customCategory) => updateAddItemDraft({ customCategory })}
-          placeholder="Optional: Gardening, Hardware..."
-          placeholderTextColor={theme.textMuted}
-          style={[
-            styles.input,
-            {
-              backgroundColor: theme.surface,
-              borderColor: theme.border,
-              color: theme.text,
-            },
-          ]}
+        <View style={styles.formGrid}>
+          <View style={styles.gridFieldBlock}>
+            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Item name</Text>
+            <TextInput
+              ref={addItemNameInputRef}
+              value={addItemDraft.name}
+              onChangeText={(name) => updateAddItemDraft({ name })}
+              placeholder="Milk, rice, toothpaste..."
+              placeholderTextColor={theme.textMuted}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                  color: theme.text,
+                },
+              ]}
+            />
+          </View>
+
+          <View style={styles.gridFieldBlock}>
+            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Quantity</Text>
+            <TextInput
+              ref={addItemQuantityInputRef}
+              value={addItemDraft.quantity}
+              onChangeText={(quantity) => updateAddItemDraft({ quantity })}
+              placeholder="1 pack"
+              placeholderTextColor={theme.textMuted}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                  color: theme.text,
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        <View style={styles.fieldBlock}>
+          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Category</Text>
+          <View style={styles.rowWrap}>
+            {model.categoryOptions.map((category) => (
+              <PillButton
+                key={category}
+                label={category}
+                active={addItemDraft.category === category}
+                onPress={() => updateAddItemDraft({ category, customCategory: '' })}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.fieldBlock}>
+          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+            Custom category
+          </Text>
+          <TextInput
+            ref={addItemCustomCategoryInputRef}
+            value={addItemDraft.customCategory}
+            onChangeText={(customCategory) => updateAddItemDraft({ customCategory })}
+            placeholder="Optional: Gardening, Hardware..."
+            placeholderTextColor={theme.textMuted}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+                color: theme.text,
+              },
+            ]}
+          />
+          <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
+            Leave this blank to use the selected category above. New categories appear as their own
+            section headers in Active basket.
+          </Text>
+        </View>
+
+        <ActionButton
+          label={`Add as ${selectedMember.name}`}
+          onPress={handleAddItem}
+          disabled={isSaving || !addItemDraft.name.trim()}
         />
-        <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
-          Leave this blank to use the selected category above. New categories appear as their own
-          section headers in Active basket.
-        </Text>
-      </View>
-
-      <ActionButton
-        label={`Add as ${selectedMember.name}`}
-        onPress={handleAddItem}
-        disabled={isSaving || !addItemDraft.name.trim()}
-      />
-    </SectionCard>
+      </SectionCard>
+    </View>
   );
 
   const dueRemindersSection = model.dueReminders.length > 0 ? (
@@ -713,6 +775,8 @@ export default function HomeScreen() {
         accessibilityHint: 'Jumps to the add item form.',
         label: 'Add item',
         onPress: handleOpenAddItemComposer,
+        scrollTargetOffset: Platform.OS === 'web' ? Spacing.four : 92,
+        scrollTargetRef: addItemSectionRef,
         scrollTo: hasBasketItems ? 'bottom' : undefined,
       }}
       subtitle="Add items, mark them bought, and close them into purchase history when ready.">

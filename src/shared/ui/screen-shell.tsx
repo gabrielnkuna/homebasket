@@ -17,6 +17,19 @@ import { useTheme } from '@/hooks/use-theme';
 import { MobileBannerAd } from '@/shared/ads';
 import { WebFooter } from './web-footer';
 
+type MeasureCallback = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  pageX: number,
+  pageY: number
+) => void;
+
+type MeasurableNode = {
+  measure?: (callback: MeasureCallback) => void;
+};
+
 type ScreenShellProps = {
   title: string;
   eyebrow?: string;
@@ -35,6 +48,8 @@ type ScreenShellProps = {
     disabled?: boolean;
     onPress: () => void;
     scrollTo?: 'top' | 'bottom';
+    scrollTargetOffset?: number;
+    scrollTargetRef?: React.RefObject<View | null>;
   };
   scrollToBottomSignal?: string | number | null;
 };
@@ -56,6 +71,7 @@ export function ScreenShell({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const scrollRef = React.useRef<ScrollView | null>(null);
+  const scrollYRef = React.useRef(0);
   const hasFloatingAd = swipeNavigationEnabled && Platform.OS !== 'web';
   const hasFloatingAction = Boolean(floatingAction);
 
@@ -104,26 +120,64 @@ export function ScreenShell({
     return () => cancelAnimationFrame(frame);
   }, [scrollToBottomSignal]);
 
+  const scrollToFloatingActionTarget = React.useCallback(() => {
+    const target = floatingAction?.scrollTargetRef?.current;
+    const scrollView = scrollRef.current;
+
+    if (!target || !scrollView) {
+      return false;
+    }
+
+    const measurableScrollView = scrollView as unknown as MeasurableNode;
+    const measurableTarget = target as unknown as MeasurableNode;
+    const measureScrollView = measurableScrollView.measure?.bind(measurableScrollView);
+    const measureTarget = measurableTarget.measure?.bind(measurableTarget);
+
+    if (!measureScrollView || !measureTarget) {
+      return false;
+    }
+
+    try {
+      measureScrollView(
+        (_scrollX, _scrollY, _scrollWidth, _scrollHeight, _scrollPageX, scrollPageY) => {
+          measureTarget(
+            (_targetX, _targetY, _targetWidth, _targetHeight, _targetPageX, targetPageY) => {
+              const targetOffset = floatingAction.scrollTargetOffset ?? Spacing.four;
+              const y = Math.max(0, scrollYRef.current + targetPageY - scrollPageY - targetOffset);
+
+              scrollView.scrollTo({ y, animated: true });
+            }
+          );
+        }
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }, [floatingAction]);
+
   const handleFloatingActionPress = React.useCallback(() => {
     if (!floatingAction || floatingAction.disabled) {
       return;
     }
 
-    if (floatingAction.scrollTo === 'top') {
+    const didScrollToTarget = scrollToFloatingActionTarget();
+
+    if (!didScrollToTarget && floatingAction.scrollTo === 'top') {
       scrollRef.current?.scrollTo({ y: 0, animated: true });
     }
 
-    if (floatingAction.scrollTo === 'bottom') {
+    if (!didScrollToTarget && floatingAction.scrollTo === 'bottom') {
       scrollRef.current?.scrollToEnd({ animated: true });
     }
 
-    if (floatingAction.scrollTo) {
-      setTimeout(floatingAction.onPress, Platform.OS === 'web' ? 80 : 240);
+    if (didScrollToTarget || floatingAction.scrollTo) {
+      setTimeout(floatingAction.onPress, Platform.OS === 'web' ? 80 : 360);
       return;
     }
 
     floatingAction.onPress();
-  }, [floatingAction]);
+  }, [floatingAction, scrollToFloatingActionTarget]);
 
   const content = (
     <ScrollView
@@ -131,6 +185,10 @@ export function ScreenShell({
       style={styles.scroll}
       keyboardShouldPersistTaps="always"
       keyboardDismissMode="none"
+      onScroll={(event) => {
+        scrollYRef.current = event.nativeEvent.contentOffset.y;
+      }}
+      scrollEventThrottle={16}
       automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
       contentContainerStyle={[
         styles.scrollContent,
@@ -209,7 +267,7 @@ export function ScreenShell({
               bottom:
                 Platform.OS === 'web'
                   ? Spacing.four
-                  : insets.bottom + Spacing.four + (hasFloatingAd ? 96 : 0),
+                  : insets.bottom + Spacing.four + (hasFloatingAd ? 64 : 0),
             },
           ]}>
           <View style={styles.floatingActionFrame}>

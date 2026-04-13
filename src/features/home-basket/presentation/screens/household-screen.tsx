@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { Fonts, Radii, Spacing } from '@/constants/theme';
 import {
   reminderCadences,
-  shoppingCategories,
 } from '@/features/home-basket/domain/models';
 import { buildHouseholdScreenModel } from '@/features/home-basket/presentation/selectors';
 import { useHomeBasketStore } from '@/features/home-basket/presentation/use-home-basket-store';
@@ -594,7 +593,7 @@ export default function HouseholdScreen() {
         <View style={styles.fieldBlock}>
           <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Category</Text>
           <View style={styles.rowWrap}>
-            {shoppingCategories.map((category) => (
+            {model.categoryOptions.map((category) => (
               <PillButton
                 key={category}
                 label={category}

@@ -133,7 +133,7 @@ function createDefaultReminderDraft() {
   return {
     title: '',
     quantity: '1',
-    category: 'Pantry' as ShoppingCategory,
+    category: 'Not specified' as ShoppingCategory,
     customCategory: '',
     cadence: 'weekly' as ReminderCadence,
     nextDueAt: formatDateInputValue(nextWeek),

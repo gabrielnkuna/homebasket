@@ -8,10 +8,12 @@ import {
   formatOrdinalDay,
 } from '@/features/home-basket/application/budget-cycle';
 import { buildRecurringSuggestions } from '@/features/home-basket/application/build-recurring-suggestions';
+import { normalizeShoppingCategoryLabel } from '@/features/home-basket/application/resolve-shopping-category';
 import {
   HomeBasketSnapshot,
   HouseholdMember,
   ShoppingFilter,
+  shoppingCategories,
 } from '@/features/home-basket/domain/models';
 
 export function getSelectedMember(
@@ -23,6 +25,29 @@ export function getSelectedMember(
     snapshot.members.find((member) => member.id === snapshot.household.shopperOfWeekMemberId) ??
     snapshot.members[0]
   );
+}
+
+export function buildHouseholdCategoryOptions(snapshot: HomeBasketSnapshot) {
+  const categoryOptionsByKey = new Map<string, string>();
+
+  const addCategory = (value: string) => {
+    const category = normalizeShoppingCategoryLabel(value);
+
+    if (!category) {
+      return;
+    }
+
+    categoryOptionsByKey.set(category.toLowerCase(), category);
+  };
+
+  shoppingCategories.forEach(addCategory);
+  snapshot.items.forEach((item) => addCategory(item.category));
+  snapshot.trips.forEach((trip) => {
+    trip.purchasedItems.forEach((item) => addCategory(item.category));
+  });
+  snapshot.reminders.forEach((reminder) => addCategory(reminder.category));
+
+  return Array.from(categoryOptionsByKey.values());
 }
 
 export function buildHomeScreenModel(
@@ -41,6 +66,7 @@ export function buildHomeScreenModel(
     selectedMember: getSelectedMember(snapshot, selectedMemberId),
     reminders,
     dueReminders: reminders.slice(0, 4),
+    categoryOptions: buildHouseholdCategoryOptions(snapshot),
   };
 }
 
@@ -65,6 +91,7 @@ export function buildTripsScreenModel(snapshot: HomeBasketSnapshot) {
       new Date(),
       snapshot.household.budgetCycleAnchorDay
     ),
+    categoryOptions: buildHouseholdCategoryOptions(snapshot),
   };
 }
 
@@ -92,5 +119,6 @@ export function buildHouseholdScreenModel(snapshot: HomeBasketSnapshot) {
       snapshot.household.budgetCycleAnchorDay
     ),
     budgetCycleAnchorDayLabel: formatOrdinalDay(snapshot.household.budgetCycleAnchorDay),
+    categoryOptions: buildHouseholdCategoryOptions(snapshot),
   };
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
@@ -53,6 +53,14 @@ export default function TripsScreen() {
   const isAnalyzingReceipt = useHomeBasketStore((state) => state.isAnalyzingReceipt);
   const error = useHomeBasketStore((state) => state.error);
   const notice = useHomeBasketStore((state) => state.notice);
+  const [expandedPurchaseItemIds, setExpandedPurchaseItemIds] = React.useState<string[]>([]);
+  const togglePurchaseItemsExpanded = React.useCallback((tripId: string) => {
+    setExpandedPurchaseItemIds((currentTripIds) =>
+      currentTripIds.includes(tripId)
+        ? currentTripIds.filter((currentTripId) => currentTripId !== tripId)
+        : [...currentTripIds, tripId]
+    );
+  }, []);
   const handleCompleteTrip = React.useCallback(async () => {
     await completeTrip();
 
@@ -545,7 +553,7 @@ export default function TripsScreen() {
                               category,
                             })
                           }
-                          placeholder="Produce, Pantry, Gardening, Other..."
+                          placeholder="Choose below or type a category..."
                           placeholderTextColor={theme.textMuted}
                           style={[
                             styles.input,
@@ -556,6 +564,20 @@ export default function TripsScreen() {
                             },
                           ]}
                         />
+                        <View style={styles.rowWrap}>
+                          {model.categoryOptions.map((category) => (
+                            <PillButton
+                              key={category}
+                              label={category}
+                              active={item.category === category}
+                              onPress={() =>
+                                updateTripPurchasedItemDraft(index, {
+                                  category,
+                                })
+                              }
+                            />
+                          ))}
+                        </View>
                       </View>
                     </View>
                     <View style={styles.actionRow}>
@@ -607,6 +629,11 @@ export default function TripsScreen() {
               snapshot.members.find((member) => member.id === trip.shopperMemberId)?.name ?? 'Unknown';
             const preview = trip.purchasedItems.slice(0, 3).map((item) => item.name).join(', ');
             const extraCount = Math.max(trip.purchasedItems.length - 3, 0);
+            const isItemListExpanded = expandedPurchaseItemIds.includes(trip.id);
+            const visiblePurchasedItems = isItemListExpanded
+              ? trip.purchasedItems
+              : trip.purchasedItems.slice(0, 6);
+            const hiddenPurchasedItemsCount = trip.purchasedItems.length - visiblePurchasedItems.length;
             const purchasedSummary =
               preview.length > 0
                 ? `${preview}${extraCount > 0 ? ` +${extraCount} more` : ''}`
@@ -640,7 +667,7 @@ export default function TripsScreen() {
                 </Text>
                 {trip.purchasedItems.length > 0 ? (
                   <View style={styles.receiptItemList}>
-                    {trip.purchasedItems.slice(0, 6).map((item) => (
+                    {visiblePurchasedItems.map((item) => (
                       <View key={`${trip.id}-${item.id}`} style={styles.historyItemRow}>
                         <View style={styles.historyItemCopy}>
                           <Text style={[styles.historyItemName, { color: theme.text }]}>
@@ -659,9 +686,28 @@ export default function TripsScreen() {
                       </View>
                     ))}
                     {trip.purchasedItems.length > 6 ? (
-                      <Text style={[styles.tripItems, { color: theme.textMuted }]}>
-                        +{trip.purchasedItems.length - 6} more items
-                      </Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          isItemListExpanded
+                            ? 'Show fewer purchased items'
+                            : `Show ${hiddenPurchasedItemsCount} more purchased items`
+                        }
+                        onPress={() => togglePurchaseItemsExpanded(trip.id)}
+                        style={({ pressed }) => [
+                          styles.moreItemsButton,
+                          {
+                            backgroundColor: theme.surfaceMuted,
+                            borderColor: theme.border,
+                            opacity: pressed ? 0.8 : 1,
+                          },
+                        ]}>
+                        <Text style={[styles.moreItemsText, { color: theme.text }]}>
+                          {isItemListExpanded
+                            ? 'Show fewer items'
+                            : `Show ${hiddenPurchasedItemsCount} more item${hiddenPurchasedItemsCount === 1 ? '' : 's'}`}
+                        </Text>
+                      </Pressable>
                     ) : null}
                   </View>
                 ) : null}
@@ -803,6 +849,18 @@ const styles = StyleSheet.create({
   },
   receiptItemList: {
     gap: Spacing.one,
+  },
+  moreItemsButton: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderRadius: Radii.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  moreItemsText: {
+    fontFamily: Fonts.sans,
+    fontSize: 13,
+    fontWeight: '800',
   },
   purchaseReviewGroup: {
     gap: Spacing.two,
