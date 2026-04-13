@@ -150,6 +150,27 @@ export default function HouseholdScreen() {
 
   const model = buildHouseholdScreenModel(snapshot);
   const hasBudget = snapshot.household.monthlyBudgetCents > 0;
+  const savedMonthlyBudgetInput = hasBudget
+    ? formatCurrencyInputValue(snapshot.household.monthlyBudgetCents)
+    : '';
+  const isCurrencyDirty =
+    session?.memberRole === 'Owner' &&
+    currencyCodeInput.trim().toUpperCase() !== snapshot.household.currencyCode;
+  const isMonthlyBudgetDirty =
+    session?.memberRole === 'Owner' && monthlyBudgetInput.trim() !== savedMonthlyBudgetInput;
+  const isPayDayDirty =
+    session?.memberRole === 'Owner' &&
+    budgetCycleAnchorDayInput.trim() !== String(budgetCycleAnchorDay);
+  const hasTypedMonthlyBudget = monthlyBudgetInput.trim().length > 0;
+  const shouldShowMonthlyBudgetAction =
+    isMonthlyBudgetDirty && (hasTypedMonthlyBudget || hasBudget);
+  const monthlyBudgetActionLabel = hasTypedMonthlyBudget ? 'Save budget' : 'Turn budget off';
+  const monthlyBudgetHelperText =
+    session?.memberRole === 'Owner'
+      ? hasBudget
+        ? 'The current budget is loaded here. Clear it and save only if you want to turn budget tracking off.'
+        : 'Budget tracking is off. Enter an amount when this household is ready to track monthly spend.'
+      : 'Only the household owner can change the monthly budget.';
   const adsPrivacyOptionsAvailable = supportsAdsPrivacyOptions();
   const suggestedCurrencyCodes = getSuggestedCurrencyCodes(
     currencyCodeInput || snapshot.household.currencyCode
@@ -169,6 +190,23 @@ export default function HouseholdScreen() {
       eyebrow="Household"
       title="Household management"
       swipeNavigationEnabled
+      floatingAction={{
+        accessibilityLabel: invite ? 'Share household invite' : 'Generate household invite',
+        accessibilityHint: 'Lets another person join this household basket.',
+        disabled: isSaving,
+        onPress: () => {
+          if (inviteShareMessage) {
+            void Share.share({
+              message: inviteShareMessage,
+              url: HOME_BASKET_WEBSITE,
+              title: `Join ${snapshot.household.name}`,
+            });
+            return;
+          }
+
+          void createInvite();
+        },
+      }}
       subtitle="Invite members, manage budget settings, and keep the household in sync.">
       {error ? <MessageBanner message={error} tone="error" /> : null}
       {!error && notice ? <MessageBanner message={notice} /> : null}
@@ -309,7 +347,7 @@ export default function HouseholdScreen() {
             editable={session?.memberRole === 'Owner'}
             onChange={setCurrencyCodeInput}
           />
-          {session?.memberRole === 'Owner' ? (
+          {isCurrencyDirty ? (
             <View style={styles.actionRow}>
               <ActionButton
                 label="Save currency"
@@ -343,10 +381,10 @@ export default function HouseholdScreen() {
                 ]}
               />
             </View>
-            {session?.memberRole === 'Owner' ? (
+            {shouldShowMonthlyBudgetAction ? (
               <View style={styles.inlineActionBlock}>
                 <ActionButton
-                  label={monthlyBudgetInput.trim() ? 'Save monthly budget' : 'Turn budget off'}
+                  label={monthlyBudgetActionLabel}
                   onPress={() => void saveMonthlyBudget(monthlyBudgetInput)}
                   disabled={isSaving}
                   tone="secondary"
@@ -355,9 +393,7 @@ export default function HouseholdScreen() {
             ) : null}
           </View>
           <Text style={[styles.supportText, { color: theme.textMuted }]}>
-            {session?.memberRole === 'Owner'
-              ? 'Leave it blank to keep budget tracking off for now.'
-              : 'Only the household owner can change the monthly budget.'}
+            {monthlyBudgetHelperText}
           </Text>
         </View>
 
@@ -383,7 +419,7 @@ export default function HouseholdScreen() {
                 ]}
               />
             </View>
-            {session?.memberRole === 'Owner' ? (
+            {isPayDayDirty ? (
               <View style={styles.inlineActionBlock}>
                 <ActionButton
                   label="Save pay day"

@@ -89,6 +89,7 @@ export default function HomeScreen() {
   const addItemNameInputRef = React.useRef<TextInput | null>(null);
   const addItemQuantityInputRef = React.useRef<TextInput | null>(null);
   const addItemCustomCategoryInputRef = React.useRef<TextInput | null>(null);
+  const [areRecurringStaplesExpanded, setAreRecurringStaplesExpanded] = React.useState(false);
 
   const dismissAddItemFocus = React.useCallback(() => {
     addItemNameInputRef.current?.blur();
@@ -168,6 +169,11 @@ export default function HomeScreen() {
     void addItem();
   }, [addItem, dismissAddItemFocus, setFilter]);
 
+  const handleOpenAddItemComposer = React.useCallback(() => {
+    setFilter('all');
+    addItemNameInputRef.current?.focus();
+  }, [setFilter]);
+
   if (!snapshot) {
     return (
       <ScreenShell
@@ -208,6 +214,29 @@ export default function HomeScreen() {
   const selectedMember = model.selectedMember;
   const hasBudget = snapshot.household.monthlyBudgetCents > 0;
   const hasBasketItems = snapshot.items.length > 0;
+  const recurringStaplePreviewLimit = 2;
+  const shouldPreviewRecurringStaples = !hasBasketItems || areRecurringStaplesExpanded;
+  const visibleRecurringStaples = shouldPreviewRecurringStaples
+    ? model.suggestions.slice(
+        0,
+        areRecurringStaplesExpanded ? model.suggestions.length : recurringStaplePreviewLimit
+      )
+    : [];
+  const hasHiddenRecurringStaples = model.suggestions.length > visibleRecurringStaples.length;
+  const canToggleRecurringStaples =
+    hasBasketItems ||
+    areRecurringStaplesExpanded ||
+    model.suggestions.length > recurringStaplePreviewLimit;
+  const recurringStaplesToggleLabel = !shouldPreviewRecurringStaples
+    ? `Show staples (${model.suggestions.length})`
+    : areRecurringStaplesExpanded
+      ? 'Show less'
+      : hasHiddenRecurringStaples
+        ? `Show all ${model.suggestions.length}`
+        : 'Hide staples';
+  const recurringStaplesDescription = shouldPreviewRecurringStaples
+    ? 'Home Basket is learning the things this household buys often, so you can re-add them in one tap.'
+    : 'Collapsed so the active basket stays easy to reach. Open it when you want quick re-add ideas.';
   const shouldFocusNotice =
     notice?.includes('added back to the basket') ||
     notice?.includes('already reflected on the active basket');
@@ -508,12 +537,114 @@ export default function HomeScreen() {
     </SectionCard>
   );
 
+  const dueRemindersSection = model.dueReminders.length > 0 ? (
+    <SectionCard
+      title="Upcoming reminders"
+      description="Shared nudges for the staples this household buys on a rhythm. Add them back to the basket when the time comes.">
+      <View style={styles.suggestionGrid}>
+        {model.dueReminders.map((reminder) => (
+          <View
+            key={reminder.id}
+            style={[
+              styles.suggestionCard,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+              },
+            ]}>
+            <View style={styles.suggestionCopy}>
+              <Text style={[styles.suggestionName, { color: theme.text }]}>
+                {reminder.title}
+              </Text>
+              <Text style={[styles.suggestionMeta, { color: theme.textMuted }]}>
+                {reminder.quantity} - {formatReminderCadence(reminder.cadence)} - {describeReminderDueDate(reminder.nextDueAt)}
+              </Text>
+              {reminder.note ? (
+                <Text style={[styles.suggestionMeta, { color: theme.textMuted }]}>
+                  {reminder.note}
+                </Text>
+              ) : null}
+            </View>
+            <ActionButton
+              label={`Add as ${selectedMember.name}`}
+              tone="secondary"
+              onPress={() => handleAddReminderToBasket(reminder.id)}
+            />
+          </View>
+        ))}
+      </View>
+    </SectionCard>
+  ) : null;
+
+  const recurringStaplesSection = model.suggestions.length > 0 ? (
+    <SectionCard title="Recurring staples" description={recurringStaplesDescription}>
+      {visibleRecurringStaples.length > 0 ? (
+        <View style={styles.suggestionGrid}>
+          {visibleRecurringStaples.map((suggestion) => (
+            <View
+              key={suggestion.key}
+              style={[
+                styles.suggestionCard,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                },
+              ]}>
+              <View style={styles.suggestionCopy}>
+                <Text style={[styles.suggestionName, { color: theme.text }]}>
+                  {suggestion.name}
+                </Text>
+                <Text style={[styles.suggestionMeta, { color: theme.textMuted }]}>
+                  {suggestion.quantity} - bought {suggestion.timesPurchased} time
+                  {suggestion.timesPurchased === 1 ? '' : 's'} - last {formatShortDate(suggestion.lastPurchasedAt)}
+                </Text>
+              </View>
+              <ActionButton
+                label="Add back"
+                tone="secondary"
+                onPress={() =>
+                  handleAddSuggestedItem({
+                    name: suggestion.name,
+                    quantity: suggestion.quantity,
+                    category: suggestion.category,
+                  })
+                }
+              />
+            </View>
+          ))}
+        </View>
+      ) : (
+        <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
+          {model.suggestions.length === 1
+            ? '1 staple suggestion is tucked away so your active list stays close.'
+            : `${model.suggestions.length} staple suggestions are tucked away so your active list stays close.`}
+        </Text>
+      )}
+
+      {canToggleRecurringStaples ? (
+        <View style={styles.compactAction}>
+          <ActionButton
+            label={recurringStaplesToggleLabel}
+            tone="secondary"
+            onPress={() => setAreRecurringStaplesExpanded((expanded) => !expanded)}
+          />
+        </View>
+      ) : null}
+    </SectionCard>
+  ) : null;
+
   return (
     <ScreenShell
       eyebrow="Shared household list"
       title={snapshot.household.name}
       swipeNavigationEnabled
       scrollToTopSignal={shouldFocusNotice ? notice : null}
+      floatingAction={{
+        accessibilityLabel: 'Add shopping item',
+        accessibilityHint: 'Jumps to the add item form.',
+        onPress: handleOpenAddItemComposer,
+        scrollTo: hasBasketItems ? 'bottom' : undefined,
+      }}
       subtitle="Add items, mark them bought, and close them into purchase history when ready.">
       <View style={styles.metricGrid}>
         <MetricCard
@@ -565,93 +696,19 @@ export default function HomeScreen() {
         </SectionCard>
       ) : null}
 
-      {model.dueReminders.length > 0 ? (
-        <SectionCard
-          title="Upcoming reminders"
-          description="Shared nudges for the staples this household buys on a rhythm. Add them back to the basket when the time comes.">
-          <View style={styles.suggestionGrid}>
-            {model.dueReminders.map((reminder) => (
-              <View
-                key={reminder.id}
-                style={[
-                  styles.suggestionCard,
-                  {
-                    backgroundColor: theme.surface,
-                    borderColor: theme.border,
-                  },
-                ]}>
-                <View style={styles.suggestionCopy}>
-                  <Text style={[styles.suggestionName, { color: theme.text }]}>
-                    {reminder.title}
-                  </Text>
-                  <Text style={[styles.suggestionMeta, { color: theme.textMuted }]}>
-                    {reminder.quantity} - {formatReminderCadence(reminder.cadence)} - {describeReminderDueDate(reminder.nextDueAt)}
-                  </Text>
-                  {reminder.note ? (
-                    <Text style={[styles.suggestionMeta, { color: theme.textMuted }]}>
-                      {reminder.note}
-                    </Text>
-                  ) : null}
-                </View>
-                <ActionButton
-                  label={`Add as ${selectedMember.name}`}
-                  tone="secondary"
-                  onPress={() => handleAddReminderToBasket(reminder.id)}
-                />
-              </View>
-            ))}
-          </View>
-        </SectionCard>
-      ) : null}
-
-      {model.suggestions.length > 0 ? (
-        <SectionCard
-          title="Recurring staples"
-          description="Home Basket is learning the things this household buys often, so you can re-add them in one tap.">
-          <View style={styles.suggestionGrid}>
-            {model.suggestions.map((suggestion) => (
-              <View
-                key={suggestion.key}
-                style={[
-                  styles.suggestionCard,
-                  {
-                    backgroundColor: theme.surface,
-                    borderColor: theme.border,
-                  },
-                ]}>
-                <View style={styles.suggestionCopy}>
-                  <Text style={[styles.suggestionName, { color: theme.text }]}>
-                    {suggestion.name}
-                  </Text>
-                  <Text style={[styles.suggestionMeta, { color: theme.textMuted }]}>
-                    {suggestion.quantity} - bought {suggestion.timesPurchased} time
-                    {suggestion.timesPurchased === 1 ? '' : 's'} - last {formatShortDate(suggestion.lastPurchasedAt)}
-                  </Text>
-                </View>
-                <ActionButton
-                  label="Add back"
-                  tone="secondary"
-                  onPress={() =>
-                    handleAddSuggestedItem({
-                      name: suggestion.name,
-                      quantity: suggestion.quantity,
-                      category: suggestion.category,
-                    })
-                  }
-                />
-              </View>
-            ))}
-          </View>
-        </SectionCard>
-      ) : null}
-
       {hasBasketItems ? (
         <>
           {activeBasketSection}
+          {dueRemindersSection}
+          {recurringStaplesSection}
           {addItemSection}
         </>
       ) : (
-        addItemSection
+        <>
+          {addItemSection}
+          {dueRemindersSection}
+          {recurringStaplesSection}
+        </>
       )}
     </ScreenShell>
   );
@@ -683,6 +740,9 @@ const styles = StyleSheet.create({
     borderRadius: Radii.medium,
     padding: Spacing.three,
     gap: Spacing.three,
+  },
+  compactAction: {
+    alignSelf: 'flex-start',
   },
   suggestionCopy: {
     gap: Spacing.one,

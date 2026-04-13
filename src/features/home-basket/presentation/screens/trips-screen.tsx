@@ -29,6 +29,7 @@ import { showInterstitialAdIfReady } from '@/shared/ads';
 export default function TripsScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const storeInputRef = React.useRef<TextInput | null>(null);
   const receiptAnalysisCapabilities = getReceiptAnalysisCapabilities({
     standardReadAvailable: canAnalyzeReceipts,
   });
@@ -91,6 +92,9 @@ export default function TripsScreen() {
     },
     [addTripItemBackToBasket, router, setFilter]
   );
+  const handleOpenPurchaseComposer = React.useCallback(() => {
+    storeInputRef.current?.focus();
+  }, []);
 
   if (!snapshot) {
     return (
@@ -142,6 +146,12 @@ export default function TripsScreen() {
       eyebrow="Purchases"
       title="Record a purchase"
       swipeNavigationEnabled
+      floatingAction={{
+        accessibilityLabel: 'Record a purchase',
+        accessibilityHint: 'Jumps to the purchase form.',
+        onPress: handleOpenPurchaseComposer,
+        scrollTo: 'top',
+      }}
       subtitle="Record bought items, ad hoc purchases, and optional receipt proof.">
       <View style={styles.metricGrid}>
         <MetricCard
@@ -186,6 +196,7 @@ export default function TripsScreen() {
           <View style={styles.gridFieldBlock}>
             <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Store or seller</Text>
             <TextInput
+              ref={storeInputRef}
               value={tripDraft.store}
               onChangeText={(store) => updateTripDraft({ store })}
               placeholder={snapshot.household.primaryStore || 'Store, seller, app...'}

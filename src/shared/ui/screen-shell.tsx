@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleProp,
   StyleSheet,
@@ -27,6 +28,13 @@ type ScreenShellProps = {
   contentStyle?: StyleProp<ViewStyle>;
   swipeNavigationEnabled?: boolean;
   scrollToTopSignal?: string | number | null;
+  floatingAction?: {
+    accessibilityLabel: string;
+    accessibilityHint?: string;
+    disabled?: boolean;
+    onPress: () => void;
+    scrollTo?: 'top' | 'bottom';
+  };
 };
 
 export function ScreenShell({
@@ -40,11 +48,13 @@ export function ScreenShell({
   contentStyle,
   swipeNavigationEnabled = false,
   scrollToTopSignal = null,
+  floatingAction,
 }: ScreenShellProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const scrollRef = React.useRef<ScrollView | null>(null);
   const hasFloatingAd = swipeNavigationEnabled && Platform.OS !== 'web';
+  const hasFloatingAction = Boolean(floatingAction);
 
   const topPadding = Platform.select({
     web: Spacing.seven,
@@ -52,8 +62,13 @@ export function ScreenShell({
   });
 
   const bottomPadding = Platform.select({
-    web: Spacing.seven,
-    default: insets.bottom + Spacing.six + Spacing.seven + (hasFloatingAd ? 96 : 0),
+    web: Spacing.seven + (hasFloatingAction ? 88 : 0),
+    default:
+      insets.bottom +
+      Spacing.six +
+      Spacing.seven +
+      (hasFloatingAd ? 96 : 0) +
+      (hasFloatingAction ? 88 : 0),
   });
 
   const keyboardAvoidingBehavior = Platform.select({
@@ -73,6 +88,27 @@ export function ScreenShell({
 
     return () => cancelAnimationFrame(frame);
   }, [scrollToTopSignal]);
+
+  const handleFloatingActionPress = React.useCallback(() => {
+    if (!floatingAction || floatingAction.disabled) {
+      return;
+    }
+
+    if (floatingAction.scrollTo === 'top') {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    }
+
+    if (floatingAction.scrollTo === 'bottom') {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }
+
+    if (floatingAction.scrollTo) {
+      setTimeout(floatingAction.onPress, Platform.OS === 'web' ? 80 : 240);
+      return;
+    }
+
+    floatingAction.onPress();
+  }, [floatingAction]);
 
   const content = (
     <ScrollView
@@ -147,6 +183,40 @@ export function ScreenShell({
             },
           ]}>
           <MobileBannerAd />
+        </View>
+      ) : null}
+      {floatingAction ? (
+        <View
+          pointerEvents="box-none"
+          style={[
+            styles.floatingActionDock,
+            {
+              bottom:
+                Platform.OS === 'web'
+                  ? Spacing.four
+                  : insets.bottom + Spacing.four + (hasFloatingAd ? 96 : 0),
+            },
+          ]}>
+          <View style={styles.floatingActionFrame}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={floatingAction.accessibilityLabel}
+              accessibilityHint={floatingAction.accessibilityHint}
+              disabled={floatingAction.disabled}
+              focusable={Platform.OS !== 'android'}
+              onPress={handleFloatingActionPress}
+              style={({ pressed }) => [
+                styles.floatingActionButton,
+                Shadows.card,
+                {
+                  backgroundColor: theme.primary,
+                  borderColor: theme.primaryStrong,
+                  opacity: floatingAction.disabled ? 0.45 : pressed ? 0.86 : 1,
+                },
+              ]}>
+              <Text style={styles.floatingActionLabel}>+</Text>
+            </Pressable>
+          </View>
         </View>
       ) : null}
     </KeyboardAvoidingView>
@@ -231,5 +301,33 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: Spacing.three,
     alignItems: 'center',
+  },
+  floatingActionDock: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacing.four,
+    alignItems: 'center',
+  },
+  floatingActionFrame: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignItems: 'flex-end',
+  },
+  floatingActionButton: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  floatingActionLabel: {
+    marginTop: -2,
+    fontFamily: Fonts.rounded,
+    fontSize: 34,
+    lineHeight: 38,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });
