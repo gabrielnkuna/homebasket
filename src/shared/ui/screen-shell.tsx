@@ -242,10 +242,10 @@ export function ScreenShell({
   );
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.keyboardRoot, { backgroundColor: theme.background }]}
-      behavior={keyboardAvoidingBehavior}>
-      {content}
+    <View style={[styles.keyboardRoot, { backgroundColor: theme.background }]}>
+      <KeyboardAvoidingView style={styles.keyboardContent} behavior={keyboardAvoidingBehavior}>
+        {content}
+      </KeyboardAvoidingView>
       {hasFloatingAd ? (
         <View
           pointerEvents="box-none"
@@ -296,12 +296,15 @@ export function ScreenShell({
           </View>
         </View>
       ) : null}
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   keyboardRoot: {
+    flex: 1,
+  },
+  keyboardContent: {
     flex: 1,
   },
   scroll: {
