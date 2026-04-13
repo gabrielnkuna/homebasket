@@ -31,6 +31,12 @@ export function WebFooter() {
       <View style={styles.footerLinks}>
         <Pressable
           accessibilityRole="link"
+          onPress={() => openWebPath(HOME_BASKET_ROUTES.about)}
+          style={styles.footerLink}>
+          <Text style={[styles.footerLinkText, { color: theme.textMuted }]}>About</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="link"
           onPress={() => openWebPath(HOME_BASKET_ROUTES.privacy)}
           style={styles.footerLink}>
           <Text style={[styles.footerLinkText, { color: theme.textMuted }]}>Privacy</Text>

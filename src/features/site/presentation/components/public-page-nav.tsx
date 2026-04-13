@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { HOME_BASKET_ROUTES } from '@/shared/config/app-links';
 
 type PublicPageNavProps = {
-  active: 'privacy' | 'terms' | 'support' | 'deleteAccount' | 'android' | 'ios';
+  active: 'about' | 'privacy' | 'terms' | 'support' | 'deleteAccount' | 'android' | 'ios';
 };
 
 export function PublicPageNav({ active }: PublicPageNavProps) {
@@ -20,6 +20,11 @@ export function PublicPageNav({ active }: PublicPageNavProps) {
         label="Home"
         active={false}
         onPress={() => openPath('/')}
+      />
+      <NavChip
+        label="About"
+        active={active === 'about'}
+        onPress={() => openPath(HOME_BASKET_ROUTES.about)}
       />
       <NavChip
         label="Privacy"

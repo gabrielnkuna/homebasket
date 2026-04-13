@@ -44,3 +44,40 @@ export function buildTripItemsBackToBasketInput(options: {
     ];
   });
 }
+
+export function buildTripItemBackToBasketInput(options: {
+  snapshot: HomeBasketSnapshot;
+  tripId: string;
+  purchasedItemId: string;
+  addedByMemberId: string;
+}): AddItemInput | null {
+  const trip = options.snapshot.trips.find((candidate) => candidate.id === options.tripId);
+
+  if (!trip) {
+    throw new Error('That purchase no longer exists.');
+  }
+
+  const purchasedItem = trip.purchasedItems.find(
+    (candidate) => candidate.id === options.purchasedItemId
+  );
+
+  if (!purchasedItem) {
+    throw new Error('That purchased item no longer exists.');
+  }
+
+  const activeFingerprints = new Set(
+    options.snapshot.items.map((item) => createItemFingerprint(item))
+  );
+  const fingerprint = createItemFingerprint(purchasedItem);
+
+  if (activeFingerprints.has(fingerprint)) {
+    return null;
+  }
+
+  return {
+    name: purchasedItem.name,
+    quantity: purchasedItem.quantity,
+    category: purchasedItem.category,
+    addedByMemberId: options.addedByMemberId,
+  };
+}

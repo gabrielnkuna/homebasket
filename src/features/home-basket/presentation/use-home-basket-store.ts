@@ -14,7 +14,10 @@ import {
   normalizeCustomShoppingCategoryLabel,
   resolveShoppingCategory,
 } from '@/features/home-basket/application/resolve-shopping-category';
-import { buildTripItemsBackToBasketInput } from '@/features/home-basket/application/re-add-trip-items';
+import {
+  buildTripItemBackToBasketInput,
+  buildTripItemsBackToBasketInput,
+} from '@/features/home-basket/application/re-add-trip-items';
 import {
   createTripPurchasedItemDraft,
   normalizeTripPurchasedItems,
@@ -31,6 +34,7 @@ import {
   ReminderCadence,
   ShoppingCategory,
   ShoppingFilter,
+  ShoppingItemStatus,
   shoppingFilters,
 } from '@/features/home-basket/domain/models';
 import {
@@ -42,6 +46,12 @@ import {
   loadStoredHouseholdSession,
   saveStoredHouseholdSession,
 } from '@/features/home-basket/infrastructure/session-storage';
+import {
+  loadPendingItemStatusUpdates,
+  PendingItemStatusUpdate,
+  queuePendingItemStatusUpdate,
+  removePendingItemStatusUpdate,
+} from '@/features/home-basket/infrastructure/pending-item-status-storage';
 import { pickTripReceiptImage } from '@/features/home-basket/infrastructure/receipt-image-picker';
 import {
   formatCurrencyInputValue,
@@ -55,7 +65,6 @@ import {
   analyzeReceiptImage,
   canAnalyzeReceipts,
 } from '../infrastructure/receipt-analysis';
-import { getAdvancedReceiptTranscriptionMessage } from '../infrastructure/receipt-analysis-capabilities';
 import { formatDateInputValue, parseDateInputValue } from '@/shared/format/date';
 
 const services = createHomeBasketServices();
@@ -68,7 +77,7 @@ const demoInviteCode = services.demoInviteCode;
 const defaultAddItemDraft = {
   name: '',
   quantity: '1',
-  category: 'Produce' as ShoppingCategory,
+  category: 'Not specified' as ShoppingCategory,
   customCategory: '',
 };
 
@@ -133,6 +142,12 @@ function createDefaultReminderDraft() {
 }
 
 let unsubscribe: (() => void) | null = null;
+let pendingItemStatusFlushInterval: ReturnType<typeof setInterval> | null = null;
+let isFlushingPendingItemStatuses = false;
+const pendingItemStatusOverrides = new Map<string, ShoppingItemStatus>();
+
+const pendingItemStatusSyncTimeoutMs = 4000;
+const pendingItemStatusFlushIntervalMs = 30000;
 
 type AddItemDraft = typeof defaultAddItemDraft;
 type ItemEditDraft = typeof defaultItemEditDraft;
@@ -194,6 +209,7 @@ type HomeBasketStore = {
   saveCurrencyCode: (currencyCodeInput: string) => Promise<void>;
   saveBudgetCycleAnchorDay: (anchorDayInput: string) => Promise<void>;
   saveMonthlyBudget: (budgetInput: string) => Promise<void>;
+  transferOwnership: (nextOwnerMemberId: string) => Promise<void>;
   createHousehold: () => Promise<void>;
   joinHousehold: () => Promise<void>;
   signInWithAccount: () => Promise<void>;
@@ -215,12 +231,130 @@ type HomeBasketStore = {
     category: ShoppingCategory;
   }) => Promise<void>;
   addTripItemsBackToBasket: (tripId: string) => Promise<void>;
+  addTripItemBackToBasket: (tripId: string, purchasedItemId: string) => Promise<void>;
   addItem: () => Promise<void>;
   saveItemEdits: () => Promise<void>;
   deleteItem: (itemId: string) => Promise<void>;
   toggleItemStatus: (itemId: string) => Promise<void>;
   completeTrip: () => Promise<void>;
 };
+
+type HomeBasketSet = (
+  partial: Partial<HomeBasketStore> | ((state: HomeBasketStore) => Partial<HomeBasketStore>)
+) => void;
+
+function pendingItemStatusKey(householdId: string, itemId: string) {
+  return `${householdId}:${itemId}`;
+}
+
+function replacePendingItemStatusOverridesForHousehold(
+  householdId: string,
+  updates: PendingItemStatusUpdate[]
+) {
+  for (const key of pendingItemStatusOverrides.keys()) {
+    if (key.startsWith(`${householdId}:`)) {
+      pendingItemStatusOverrides.delete(key);
+    }
+  }
+
+  updates
+    .filter((update) => update.householdId === householdId)
+    .forEach((update) => {
+      pendingItemStatusOverrides.set(
+        pendingItemStatusKey(update.householdId, update.itemId),
+        update.status
+      );
+    });
+}
+
+function applyPendingItemStatusOverrides(snapshot: HomeBasketSnapshot): HomeBasketSnapshot {
+  const items = snapshot.items.map((item) => {
+    const pendingStatus = pendingItemStatusOverrides.get(
+      pendingItemStatusKey(snapshot.household.id, item.id)
+    );
+
+    return pendingStatus
+      ? {
+          ...item,
+          status: pendingStatus,
+        }
+      : item;
+  });
+
+  return {
+    ...snapshot,
+    items,
+  };
+}
+
+function waitForPendingItemStatusSync(syncPromise: Promise<void>) {
+  return Promise.race([
+    syncPromise.then(() => 'synced' as const),
+    new Promise<'queued'>((resolve) => {
+      setTimeout(() => resolve('queued'), pendingItemStatusSyncTimeoutMs);
+    }),
+  ]);
+}
+
+async function flushPendingItemStatusUpdatesForHousehold(
+  householdId: string,
+  set: HomeBasketSet
+) {
+  if (isFlushingPendingItemStatuses) {
+    return;
+  }
+
+  isFlushingPendingItemStatuses = true;
+  let syncedCount = 0;
+
+  try {
+    const updates = (await loadPendingItemStatusUpdates()).filter(
+      (update) => update.householdId === householdId
+    );
+
+    for (const update of updates) {
+      const syncPromise = homeBasketRepository.setItemStatus(
+        update.householdId,
+        update.itemId,
+        update.status
+      );
+
+      try {
+        const result = await waitForPendingItemStatusSync(syncPromise);
+
+        if (result === 'queued') {
+          void syncPromise
+            .then(async () => {
+              await removePendingItemStatusUpdate(update);
+              pendingItemStatusOverrides.delete(
+                pendingItemStatusKey(update.householdId, update.itemId)
+              );
+            })
+            .catch(() => undefined);
+          break;
+        }
+
+        await removePendingItemStatusUpdate(update);
+        pendingItemStatusOverrides.delete(pendingItemStatusKey(update.householdId, update.itemId));
+        syncedCount += 1;
+      } catch {
+        break;
+      }
+    }
+  } finally {
+    isFlushingPendingItemStatuses = false;
+  }
+
+  if (syncedCount > 0) {
+    set({
+      notice:
+        syncedCount === 1
+          ? 'Offline basket change synced.'
+          : `${syncedCount} offline basket changes synced.`,
+      error: null,
+    });
+  }
+}
 
 function resetHouseholdRuntimeState(): Pick<
   HomeBasketStore,
@@ -252,6 +386,11 @@ function stopSubscription() {
     unsubscribe();
     unsubscribe = null;
   }
+
+  if (pendingItemStatusFlushInterval) {
+    clearInterval(pendingItemStatusFlushInterval);
+    pendingItemStatusFlushInterval = null;
+  }
 }
 
 function toHomeBasketError(error: unknown, fallback: string) {
@@ -267,6 +406,14 @@ async function resolveSessionForAuthUser(authSession: HomeBasketAuthSession) {
 
   if (storedSession && storedSession.authUserId !== authSession.userId) {
     await clearStoredHouseholdSession();
+  }
+
+  if (matchingStoredSession) {
+    return {
+      restoredSession: null,
+      activeSession: matchingStoredSession,
+      restoreError: null,
+    };
   }
 
   try {
@@ -287,50 +434,84 @@ async function resolveSessionForAuthUser(authSession: HomeBasketAuthSession) {
 
 async function activateSession(
   session: HouseholdSession,
-  set: (partial: Partial<HomeBasketStore> | ((state: HomeBasketStore) => Partial<HomeBasketStore>)) => void
+  set: HomeBasketSet
 ) {
   stopSubscription();
+  let activeSession = session;
 
   set({
-    session,
-    selectedMemberId: session.memberId,
+    session: activeSession,
+    selectedMemberId: activeSession.memberId,
     isBootstrapping: true,
     error: null,
     notice: null,
   });
 
+  const pendingStatusUpdates = await loadPendingItemStatusUpdates();
+  replacePendingItemStatusOverridesForHousehold(activeSession.householdId, pendingStatusUpdates);
+  pendingItemStatusFlushInterval = setInterval(() => {
+    void flushPendingItemStatusUpdatesForHousehold(activeSession.householdId, set);
+  }, pendingItemStatusFlushIntervalMs);
+
   unsubscribe = homeBasketRepository.subscribe(session.householdId, (snapshot) => {
-    const preferredMemberId = snapshot.members.find((member) => member.id === session.memberId)?.id;
-    const fallbackMemberId = preferredMemberId ?? snapshot.members[0]?.id ?? null;
+    const snapshotWithPendingStatuses = applyPendingItemStatusOverrides(snapshot);
+    const activeMember = snapshotWithPendingStatuses.members.find(
+      (member) => member.id === activeSession.memberId
+    );
+    const nextSession = activeMember
+      ? {
+          ...activeSession,
+          memberName: activeMember.name,
+          memberRole: activeMember.role,
+        }
+      : activeSession;
+    const sessionChanged =
+      nextSession.memberName !== activeSession.memberName ||
+      nextSession.memberRole !== activeSession.memberRole;
+
+    if (sessionChanged) {
+      activeSession = nextSession;
+      void saveStoredHouseholdSession(nextSession);
+      void accessRepository.syncSession(nextSession);
+    }
+
+    const preferredMemberId = snapshotWithPendingStatuses.members.find(
+      (member) => member.id === activeSession.memberId
+    )?.id;
+    const fallbackMemberId = preferredMemberId ?? snapshotWithPendingStatuses.members[0]?.id ?? null;
 
     set((state) => ({
-      snapshot,
+      snapshot: snapshotWithPendingStatuses,
+      session: activeSession,
       isReady: true,
       isBootstrapping: false,
       error: null,
       notice: null,
-      selectedMemberId: snapshot.members.some((member) => member.id === state.selectedMemberId)
+      selectedMemberId: snapshotWithPendingStatuses.members.some(
+        (member) => member.id === state.selectedMemberId
+      )
         ? state.selectedMemberId
         : fallbackMemberId,
       tripDraft: {
         ...state.tripDraft,
-        store: state.tripDraft.store || snapshot.household.primaryStore,
+        store: state.tripDraft.store || snapshotWithPendingStatuses.household.primaryStore,
       },
     }));
+    void flushPendingItemStatusUpdatesForHousehold(activeSession.householdId, set);
   });
 
-  const invite = await accessRepository.getLatestInvite(session.householdId);
+  const invite = await accessRepository.getLatestInvite(activeSession.householdId);
 
   set({
     invite,
-    session,
-    selectedMemberId: session.memberId,
+    session: activeSession,
+    selectedMemberId: activeSession.memberId,
     isReady: true,
     isBootstrapping: false,
     notice: null,
   });
 
-  await saveStoredHouseholdSession(session);
+  await saveStoredHouseholdSession(activeSession);
 }
 
 export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
@@ -775,6 +956,64 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
           error instanceof Error
             ? error.message
             : 'Unable to update the monthly budget right now.',
+        notice: null,
+      });
+    }
+  },
+  async transferOwnership(nextOwnerMemberId) {
+    const state = get();
+    const snapshot = state.snapshot;
+    const session = state.session;
+
+    if (!snapshot || !session) {
+      return;
+    }
+
+    if (session.memberRole !== 'Owner') {
+      set({
+        error: 'Only the current household owner can transfer ownership.',
+        notice: null,
+      });
+      return;
+    }
+
+    if (session.memberId === nextOwnerMemberId) {
+      set({
+        error: null,
+        notice: 'You are already the household owner.',
+      });
+      return;
+    }
+
+    const nextOwner = snapshot.members.find((member) => member.id === nextOwnerMemberId);
+
+    if (!nextOwner) {
+      set({
+        error: 'Choose a household member to become the new owner.',
+        notice: null,
+      });
+      return;
+    }
+
+    try {
+      set({ isSaving: true, error: null, notice: null });
+      await homeBasketRepository.transferOwnership(
+        snapshot.household.id,
+        session.memberId,
+        nextOwnerMemberId
+      );
+      set({
+        isSaving: false,
+        error: null,
+        notice: `${nextOwner.name} is now the household owner.`,
+      });
+    } catch (error) {
+      set({
+        isSaving: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unable to transfer household ownership right now.',
         notice: null,
       });
     }
@@ -1378,6 +1617,65 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
       });
     }
   },
+  async addTripItemBackToBasket(tripId, purchasedItemId) {
+    const state = get();
+    const snapshot = state.snapshot;
+    const selectedMemberId = state.selectedMemberId;
+
+    if (!snapshot || !selectedMemberId) {
+      return;
+    }
+
+    const trip = snapshot.trips.find((candidate) => candidate.id === tripId);
+
+    if (!trip) {
+      set({ error: 'That purchase no longer exists.', notice: null });
+      return;
+    }
+
+    const purchasedItem = trip.purchasedItems.find(
+      (candidate) => candidate.id === purchasedItemId
+    );
+
+    if (!purchasedItem) {
+      set({ error: 'That purchased item no longer exists.', notice: null });
+      return;
+    }
+
+    try {
+      const itemToAdd = buildTripItemBackToBasketInput({
+        snapshot,
+        tripId,
+        purchasedItemId,
+        addedByMemberId: selectedMemberId,
+      });
+
+      if (!itemToAdd) {
+        set({
+          error: null,
+          notice: `${purchasedItem.name} is already on the active basket.`,
+        });
+        return;
+      }
+
+      set({ isSaving: true, error: null, notice: null });
+      await homeBasketRepository.addItem(snapshot.household.id, itemToAdd);
+      set({
+        isSaving: false,
+        error: null,
+        notice: `${purchasedItem.name} was added back to the basket.`,
+      });
+    } catch (error) {
+      set({
+        isSaving: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unable to add that item back to the basket right now.',
+        notice: null,
+      });
+    }
+  },
   async addItem() {
     const state = get();
     const snapshot = state.snapshot;
@@ -1483,13 +1781,76 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
       return;
     }
 
+    const item = snapshot.items.find((candidate) => candidate.id === itemId);
+
+    if (!item) {
+      set({ error: 'That shopping item no longer exists.', notice: null });
+      return;
+    }
+
+    const optimisticStatus = item.status === 'bought' ? 'pending' : 'bought';
+    const pendingUpdate: PendingItemStatusUpdate = {
+      householdId: snapshot.household.id,
+      itemId,
+      status: optimisticStatus,
+      updatedAt: new Date().toISOString(),
+    };
+
+    pendingItemStatusOverrides.set(
+      pendingItemStatusKey(pendingUpdate.householdId, pendingUpdate.itemId),
+      pendingUpdate.status
+    );
+
     try {
-      set({ error: null, notice: null });
-      await homeBasketRepository.toggleItemStatus(snapshot.household.id, itemId);
-    } catch (error) {
       set({
-        error: error instanceof Error ? error.message : 'Unable to update that item right now.',
+        snapshot: {
+          ...snapshot,
+          items: snapshot.items.map((candidate) =>
+            candidate.id === itemId
+              ? {
+                  ...candidate,
+                  status: optimisticStatus,
+                }
+              : candidate
+          ),
+        },
+        error: null,
         notice: null,
+      });
+
+      const syncPromise = homeBasketRepository.setItemStatus(
+        pendingUpdate.householdId,
+        pendingUpdate.itemId,
+        pendingUpdate.status
+      );
+      const result = await waitForPendingItemStatusSync(syncPromise);
+
+      if (result === 'queued') {
+        await queuePendingItemStatusUpdate(pendingUpdate);
+        void syncPromise
+          .then(async () => {
+            await removePendingItemStatusUpdate(pendingUpdate);
+            pendingItemStatusOverrides.delete(
+              pendingItemStatusKey(pendingUpdate.householdId, pendingUpdate.itemId)
+            );
+          })
+          .catch(() => undefined);
+        set({
+          notice: 'Saved offline. Home Basket will sync this item when the device reconnects.',
+          error: null,
+        });
+        return;
+      }
+
+      await removePendingItemStatusUpdate(pendingUpdate);
+      pendingItemStatusOverrides.delete(
+        pendingItemStatusKey(pendingUpdate.householdId, pendingUpdate.itemId)
+      );
+    } catch {
+      await queuePendingItemStatusUpdate(pendingUpdate);
+      set({
+        error: null,
+        notice: 'Saved offline. Home Basket will sync this item when the device reconnects.',
       });
     }
   },
@@ -1518,16 +1879,32 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
     const totalSpendCents =
       parseCurrencyInput(latestTripDraft.totalSpend) ??
       receiptAnalysis?.detectedTotalSpendCents ??
-      null;
+      0;
     const reviewedPurchasedItems = normalizeTripPurchasedItems(
       latestTripDraft.purchasedItemsDraft
     );
+    const receiptUpload =
+      latestTripDraft.receiptBase64 &&
+      latestTripDraft.receiptMimeType &&
+      latestTripDraft.receiptFileName &&
+      latestTripDraft.receiptPreviewUri
+        ? {
+            base64: latestTripDraft.receiptBase64,
+            mimeType: latestTripDraft.receiptMimeType,
+            fileName: latestTripDraft.receiptFileName,
+            previewUri: latestTripDraft.receiptPreviewUri,
+          }
+        : undefined;
+    const hasPurchaseEvidence =
+      snapshot.items.some((item) => item.status === 'bought') ||
+      reviewedPurchasedItems.length > 0 ||
+      Boolean(receiptUpload) ||
+      totalSpendCents > 0;
 
-    if (totalSpendCents === null) {
+    if (!hasPurchaseEvidence) {
       set({
-        error: latestTripDraft.receiptBase64
-          ? `Home Basket could not detect the total from this receipt yet. Enter it manually for now. ${getAdvancedReceiptTranscriptionMessage()}`
-          : 'Enter the total spend for this purchase, for example 842.50.',
+        error:
+          'Add at least one purchased item, attach a receipt, or enter a total before recording this purchase.',
         notice: null,
       });
       return;
@@ -1541,18 +1918,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
         totalSpendCents,
         note: latestTripDraft.note.trim() || undefined,
         purchasedItems: reviewedPurchasedItems,
-        receipt:
-          latestTripDraft.receiptBase64 &&
-          latestTripDraft.receiptMimeType &&
-          latestTripDraft.receiptFileName &&
-          latestTripDraft.receiptPreviewUri
-            ? {
-                base64: latestTripDraft.receiptBase64,
-                mimeType: latestTripDraft.receiptMimeType,
-                fileName: latestTripDraft.receiptFileName,
-                previewUri: latestTripDraft.receiptPreviewUri,
-              }
-            : undefined,
+        receipt: receiptUpload,
       });
       set({
         isSaving: false,

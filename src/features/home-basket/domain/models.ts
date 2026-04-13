@@ -1,4 +1,5 @@
 export const shoppingCategories = [
+  'Not specified',
   'Produce',
   'Pantry',
   'Dairy',

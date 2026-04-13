@@ -47,11 +47,13 @@ export function buildHomeScreenModel(
 export function buildTripsScreenModel(snapshot: HomeBasketSnapshot) {
   const dashboard = buildDashboard(snapshot);
   const readyItems = snapshot.items.filter((item) => item.status === 'bought');
+  const tripsWithTotals = snapshot.trips.filter((trip) => trip.totalSpendCents > 0);
   const averageTripSpendCents =
-    snapshot.trips.length === 0
+    tripsWithTotals.length === 0
       ? 0
       : Math.round(
-          snapshot.trips.reduce((sum, trip) => sum + trip.totalSpendCents, 0) / snapshot.trips.length
+          tripsWithTotals.reduce((sum, trip) => sum + trip.totalSpendCents, 0) /
+            tripsWithTotals.length
         );
 
   return {

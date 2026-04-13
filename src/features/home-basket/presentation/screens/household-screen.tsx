@@ -53,6 +53,7 @@ export default function HouseholdScreen() {
   const saveCurrencyCode = useHomeBasketStore((state) => state.saveCurrencyCode);
   const saveBudgetCycleAnchorDay = useHomeBasketStore((state) => state.saveBudgetCycleAnchorDay);
   const saveMonthlyBudget = useHomeBasketStore((state) => state.saveMonthlyBudget);
+  const transferOwnership = useHomeBasketStore((state) => state.transferOwnership);
   const sendPasswordReset = useHomeBasketStore((state) => state.sendPasswordReset);
   const sendVerificationEmail = useHomeBasketStore((state) => state.sendVerificationEmail);
   const refreshAccountStatus = useHomeBasketStore((state) => state.refreshAccountStatus);
@@ -109,6 +110,12 @@ export default function HouseholdScreen() {
       setIsCheckingBadge(false);
     }
   }, [snapshot]);
+  const handleTransferOwnership = React.useCallback(
+    (memberId: string) => {
+      void transferOwnership(memberId);
+    },
+    [transferOwnership]
+  );
 
   React.useEffect(() => {
     setBudgetCycleAnchorDayInput(String(budgetCycleAnchorDay));
@@ -830,9 +837,12 @@ export default function HouseholdScreen() {
 
       <SectionCard
         title="Household roster"
-        description="Roles are light-touch so the app stays friendly for family members and domestic workers alike.">
+        description="Owners can transfer ownership when another member should manage household settings.">
         {snapshot.members.map((member) => {
           const isSelected = member.id === selectedMemberId;
+          const isOwner = member.role === 'Owner';
+          const canTransferOwnership =
+            session?.memberRole === 'Owner' && member.id !== session.memberId && !isOwner;
 
           return (
             <View
@@ -860,6 +870,18 @@ export default function HouseholdScreen() {
                 <Text style={[styles.memberName, { color: theme.text }]}>{member.name}</Text>
                 <Text style={[styles.memberRole, { color: theme.textMuted }]}>{member.role}</Text>
               </View>
+              {isOwner ? (
+                <View
+                  style={[
+                    styles.roleTag,
+                    {
+                      backgroundColor: theme.primarySoft,
+                      borderColor: theme.border,
+                    },
+                  ]}>
+                  <Text style={[styles.roleTagText, { color: theme.text }]}>Owner</Text>
+                </View>
+              ) : null}
               {member.id === snapshot.household.shopperOfWeekMemberId ? (
                 <View
                   style={[
@@ -870,6 +892,16 @@ export default function HouseholdScreen() {
                     },
                   ]}>
                   <Text style={[styles.roleTagText, { color: theme.text }]}>Shopper</Text>
+                </View>
+              ) : null}
+              {canTransferOwnership ? (
+                <View style={styles.memberAction}>
+                  <ActionButton
+                    label="Make owner"
+                    tone="secondary"
+                    onPress={() => handleTransferOwnership(member.id)}
+                    disabled={isSaving}
+                  />
                 </View>
               ) : null}
             </View>
@@ -1054,6 +1086,9 @@ const styles = StyleSheet.create({
   memberCopy: {
     flex: 1,
     gap: 2,
+  },
+  memberAction: {
+    minWidth: 130,
   },
   memberName: {
     fontFamily: Fonts.sans,

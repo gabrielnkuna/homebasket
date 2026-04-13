@@ -118,6 +118,35 @@ export function createInMemoryHomeBasketRepository(
       });
       notifyHousehold(database, householdId);
     },
+    async transferOwnership(householdId, currentOwnerMemberId, nextOwnerMemberId) {
+      const snapshot = requireHousehold(database, householdId);
+      const currentOwner = snapshot.members.find((member) => member.id === currentOwnerMemberId);
+      const nextOwner = snapshot.members.find((member) => member.id === nextOwnerMemberId);
+
+      if (!currentOwner || currentOwner.role !== 'Owner') {
+        throw new Error('Only the current household owner can transfer ownership.');
+      }
+
+      if (!nextOwner) {
+        throw new Error('Choose a household member to become the new owner.');
+      }
+
+      database.households.set(householdId, {
+        ...snapshot,
+        members: snapshot.members.map((member) => {
+          if (member.id === currentOwnerMemberId) {
+            return { ...member, role: 'Household member' };
+          }
+
+          if (member.id === nextOwnerMemberId) {
+            return { ...member, role: 'Owner' };
+          }
+
+          return member;
+        }),
+      });
+      notifyHousehold(database, householdId);
+    },
     async addItem(householdId, input: AddItemInput) {
       const snapshot = requireHousehold(database, householdId);
       database.households.set(
@@ -155,6 +184,27 @@ export function createInMemoryHomeBasketRepository(
     async deleteItem(householdId, itemId: string) {
       const snapshot = requireHousehold(database, householdId);
       database.households.set(householdId, deleteShoppingItem(snapshot, itemId));
+      notifyHousehold(database, householdId);
+    },
+    async setItemStatus(householdId, itemId, status) {
+      const snapshot = requireHousehold(database, householdId);
+      const itemExists = snapshot.items.some((item) => item.id === itemId);
+
+      if (!itemExists) {
+        throw new Error('That shopping item no longer exists.');
+      }
+
+      database.households.set(householdId, {
+        ...snapshot,
+        items: snapshot.items.map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                status,
+              }
+            : item
+        ),
+      });
       notifyHousehold(database, householdId);
     },
     async toggleItemStatus(householdId, itemId: string) {

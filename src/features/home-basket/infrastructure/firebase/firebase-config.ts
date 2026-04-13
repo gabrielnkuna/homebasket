@@ -1,6 +1,13 @@
 import { FirebaseApp, FirebaseOptions, getApp, getApps, initializeApp } from 'firebase/app';
-import { Firestore, getFirestore } from 'firebase/firestore';
+import {
+  Firestore,
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore';
 import { FirebaseStorage, getStorage } from 'firebase/storage';
+import { Platform } from 'react-native';
 
 import { getPlatformFirebaseAuth } from '@/features/home-basket/infrastructure/firebase/firebase-auth';
 
@@ -48,6 +55,20 @@ export function getFirestoreDatabase() {
 
   if (firestoreDb) {
     return firestoreDb;
+  }
+
+  if (Platform.OS === 'web') {
+    try {
+      firestoreDb = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
+      return firestoreDb;
+    } catch {
+      firestoreDb = getFirestore(app);
+      return firestoreDb;
+    }
   }
 
   firestoreDb = getFirestore(app);

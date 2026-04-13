@@ -287,7 +287,7 @@ export function createFirestoreHomeBasketRepository(
       );
 
       const itemsUnsubscribe = onSnapshot(
-        query(collection(db, 'households', householdId, 'items'), orderBy('addedAt', 'desc')),
+        query(collection(db, 'households', householdId, 'items'), orderBy('addedAt', 'asc')),
         (snapshot) => {
           hasLoaded.items = true;
           latest.items = snapshot.docs.map(mapItem);
@@ -336,6 +336,31 @@ export function createFirestoreHomeBasketRepository(
         monthlyBudgetCents: Math.max(monthlyBudgetCents, 0),
       });
     },
+    async transferOwnership(householdId, currentOwnerMemberId, nextOwnerMemberId) {
+      if (currentOwnerMemberId === nextOwnerMemberId) {
+        return;
+      }
+
+      const currentOwnerRef = doc(db, 'households', householdId, 'members', currentOwnerMemberId);
+      const nextOwnerRef = doc(db, 'households', householdId, 'members', nextOwnerMemberId);
+      const [currentOwnerSnapshot, nextOwnerSnapshot] = await Promise.all([
+        getDoc(currentOwnerRef),
+        getDoc(nextOwnerRef),
+      ]);
+
+      if (!currentOwnerSnapshot.exists() || currentOwnerSnapshot.data().role !== 'Owner') {
+        throw new Error('Only the current household owner can transfer ownership.');
+      }
+
+      if (!nextOwnerSnapshot.exists()) {
+        throw new Error('Choose a household member to become the new owner.');
+      }
+
+      const batch = writeBatch(db);
+      batch.update(currentOwnerRef, { role: 'Household member' });
+      batch.update(nextOwnerRef, { role: 'Owner' });
+      await batch.commit();
+    },
     async addItem(householdId, input: AddItemInput) {
       const itemRef = doc(collection(db, 'households', householdId, 'items'));
       await setDoc(itemRef, buildItemDocument(input));
@@ -377,6 +402,13 @@ export function createFirestoreHomeBasketRepository(
       }
 
       await deleteDoc(itemRef);
+    },
+    async setItemStatus(householdId, itemId, status) {
+      const itemRef = doc(db, 'households', householdId, 'items', itemId);
+
+      await updateDoc(itemRef, {
+        status,
+      });
     },
     async toggleItemStatus(householdId, itemId: string) {
       const itemRef = doc(db, 'households', householdId, 'items', itemId);

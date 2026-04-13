@@ -43,6 +43,7 @@ export default function TripsScreen() {
   const removeTripPurchasedItemDraft = useHomeBasketStore((state) => state.removeTripPurchasedItemDraft);
   const applyReceiptDetectedItems = useHomeBasketStore((state) => state.applyReceiptDetectedItems);
   const addTripItemsBackToBasket = useHomeBasketStore((state) => state.addTripItemsBackToBasket);
+  const addTripItemBackToBasket = useHomeBasketStore((state) => state.addTripItemBackToBasket);
   const toggleItemStatus = useHomeBasketStore((state) => state.toggleItemStatus);
   const completeTrip = useHomeBasketStore((state) => state.completeTrip);
   const pickTripReceipt = useHomeBasketStore((state) => state.pickTripReceipt);
@@ -76,6 +77,19 @@ export default function TripsScreen() {
       }
     },
     [addTripItemsBackToBasket, router, setFilter]
+  );
+  const handleAddTripItemBackToBasket = React.useCallback(
+    async (tripId: string, purchasedItemId: string) => {
+      setFilter('all');
+      await addTripItemBackToBasket(tripId, purchasedItemId);
+
+      const latestState = useHomeBasketStore.getState();
+
+      if (!latestState.error) {
+        router.replace('/');
+      }
+    },
+    [addTripItemBackToBasket, router, setFilter]
   );
 
   if (!snapshot) {
@@ -120,6 +134,8 @@ export default function TripsScreen() {
     })),
     reviewedItems: tripDraft.purchasedItemsDraft,
   }).length;
+  const purchaseFeedbackMessage = error ?? notice;
+  const purchaseFeedbackTone: 'error' | 'notice' = error ? 'error' : 'notice';
 
   return (
     <ScreenShell
@@ -137,7 +153,7 @@ export default function TripsScreen() {
         <MetricCard
           label="Average purchase"
           value={formatCurrency(model.averageTripSpendCents, snapshot.household.currencyCode)}
-          helper="Across the recorded purchase history"
+          helper="Across purchases with totals"
         />
         <MetricCard
           label="Ready items"
@@ -151,9 +167,6 @@ export default function TripsScreen() {
           helper="Past purchases with an attached receipt image"
         />
       </View>
-
-      {error ? <MessageBanner message={error} tone="error" /> : null}
-      {!error && notice ? <MessageBanner message={notice} /> : null}
 
       <SectionCard
         title="Record this purchase"
@@ -196,7 +209,7 @@ export default function TripsScreen() {
               placeholder={
                 tripDraft.receiptPreviewUri
                   ? 'Optional if the receipt total is detected'
-                  : '842.50'
+                  : 'Optional'
               }
               placeholderTextColor={theme.textMuted}
               style={[
@@ -210,8 +223,8 @@ export default function TripsScreen() {
             />
             <Text style={[styles.supportText, { color: theme.textMuted }]}>
               {tripDraft.receiptPreviewUri
-                ? 'Leave this blank if the uploaded slip is readable. Home Basket will use the detected total when it can.'
-                : 'Enter the purchase total manually if you are not attaching a receipt.'}
+                ? 'Optional. Leave blank if the uploaded slip is readable, or record the purchase without a total for now.'
+                : 'Optional. Add a total when you want spend tracking, or leave it blank to only keep the purchased items.'}
             </Text>
           </View>
         </View>
@@ -551,11 +564,15 @@ export default function TripsScreen() {
           {model.readyItems.length === 0
             ? finalTripItemsCount
               ? `${finalTripItemsCount} reviewed purchased item${finalTripItemsCount === 1 ? '' : 's'} will be stored in this purchase history.`
-              : 'No basket items are marked as bought yet, but you can still save this as an ad hoc purchase with the total spend and receipt proof.'
+              : 'No basket items are marked as bought yet, but you can still save this as an ad hoc purchase with optional spend and receipt proof.'
             : finalTripItemsCount
               ? `${finalTripItemsCount} total purchased item${finalTripItemsCount === 1 ? '' : 's'} will be stored after combining the bought basket items with your reviewed receipt lines.`
               : `${model.readyItems.length} bought item${model.readyItems.length === 1 ? '' : 's'} will move into the purchase history.`}
         </Text>
+
+        {purchaseFeedbackMessage ? (
+          <MessageBanner message={purchaseFeedbackMessage} tone={purchaseFeedbackTone} />
+        ) : null}
 
         <ActionButton
           label={`Record purchase as ${selectedMember.name}`}
@@ -600,7 +617,9 @@ export default function TripsScreen() {
                     </Text>
                   </View>
                   <Text style={[styles.tripTotal, { color: theme.primaryStrong }]}>
-                    {formatCurrency(trip.totalSpendCents, snapshot.household.currencyCode)}
+                    {trip.totalSpendCents > 0
+                      ? formatCurrency(trip.totalSpendCents, snapshot.household.currencyCode)
+                      : 'No total'}
                   </Text>
                 </View>
                 <Text style={[styles.tripItems, { color: theme.textMuted }]}>
@@ -610,12 +629,20 @@ export default function TripsScreen() {
                   <View style={styles.receiptItemList}>
                     {trip.purchasedItems.slice(0, 6).map((item) => (
                       <View key={`${trip.id}-${item.id}`} style={styles.historyItemRow}>
-                        <Text style={[styles.historyItemName, { color: theme.text }]}>
-                          {item.name}
-                        </Text>
-                        <Text style={[styles.tripItems, { color: theme.textMuted }]}>
-                          Qty {item.quantity} - {item.category}
-                        </Text>
+                        <View style={styles.historyItemCopy}>
+                          <Text style={[styles.historyItemName, { color: theme.text }]}>
+                            {item.name}
+                          </Text>
+                          <Text style={[styles.tripItems, { color: theme.textMuted }]}>
+                            Qty {item.quantity} - {item.category}
+                          </Text>
+                        </View>
+                        <ActionButton
+                          label="Add back"
+                          tone="secondary"
+                          onPress={() => void handleAddTripItemBackToBasket(trip.id, item.id)}
+                          disabled={isSaving}
+                        />
                       </View>
                     ))}
                     {trip.purchasedItems.length > 6 ? (
@@ -860,6 +887,15 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   historyItemRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  historyItemCopy: {
+    flex: 1,
+    minWidth: 160,
     gap: 2,
   },
   historyItemName: {

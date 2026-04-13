@@ -28,16 +28,18 @@ export function completeShoppingTrip(
     boughtItems,
     reviewedItems: input.purchasedItems,
   });
+  const hasPurchaseEvidence =
+    finalPurchasedItems.length > 0 || Boolean(input.receipt) || input.totalSpendCents > 0;
 
-  if (input.totalSpendCents <= 0) {
-    throw new Error('Enter the total spend for this purchase.');
+  if (!hasPurchaseEvidence) {
+    throw new Error('Add at least one purchased item, attach a receipt, or enter a total before recording this purchase.');
   }
 
   const trip: ShoppingTrip = {
     id: input.createId?.() ?? `trip-${input.completedAt ?? new Date().toISOString()}`,
     store: input.store.trim() || snapshot.household.primaryStore || 'Unspecified store',
     shopperMemberId: input.shopperMemberId,
-    totalSpendCents: input.totalSpendCents,
+    totalSpendCents: Math.max(input.totalSpendCents, 0),
     completedAt: input.completedAt ?? new Date().toISOString(),
     note: input.note?.trim() || undefined,
     purchasedItems: finalPurchasedItems,

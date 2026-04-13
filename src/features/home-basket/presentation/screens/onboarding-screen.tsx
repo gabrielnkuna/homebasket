@@ -336,12 +336,14 @@ export default function OnboardingScreen() {
       ) : onboardingMode === 'join' ? (
         <SectionCard
           title="Join with invite code"
-          description="Use the invite from the household owner or main shopper. In Firestore mode, the device identity and household membership stay linked automatically on future launches.">
+          description="Use the invite from the household owner or main shopper. This device will reconnect to the same household automatically.">
           <View style={styles.formGrid}>
-            <View style={styles.fieldBlock}>
+            <View style={styles.gridFieldBlock}>
               <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Invite code</Text>
               <TextInput
                 autoCapitalize="characters"
+                autoCorrect={false}
+                textContentType="oneTimeCode"
                 value={joinHouseholdDraft.inviteCode}
                 onChangeText={(inviteCode) => updateJoinHouseholdDraft({ inviteCode })}
                 placeholder="HB-AB123"
@@ -356,7 +358,7 @@ export default function OnboardingScreen() {
                 ]}
               />
             </View>
-            <View style={styles.fieldBlock}>
+            <View style={styles.gridFieldBlock}>
               <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Your name</Text>
               <TextInput
                 value={joinHouseholdDraft.memberName}

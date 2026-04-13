@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTripItemsBackToBasketInput } from '@/features/home-basket/application/re-add-trip-items';
+import {
+  buildTripItemBackToBasketInput,
+  buildTripItemsBackToBasketInput,
+} from '@/features/home-basket/application/re-add-trip-items';
 import { createDemoHomeBasketSnapshot } from '@/features/home-basket/infrastructure/demo/create-demo-home-basket-snapshot';
 
 describe('buildTripItemsBackToBasketInput', () => {
@@ -61,5 +64,23 @@ describe('buildTripItemsBackToBasketInput', () => {
         addedByMemberId: 'member-themba',
       },
     ]);
+  });
+
+  it('re-adds one purchased line item at a time', () => {
+    const snapshot = createDemoHomeBasketSnapshot(new Date('2026-03-29T09:00:00.000Z'));
+
+    expect(
+      buildTripItemBackToBasketInput({
+        snapshot,
+        tripId: 'trip-1',
+        purchasedItemId: 'trip-1-item-1',
+        addedByMemberId: 'member-themba',
+      })
+    ).toEqual({
+      name: 'Rice',
+      quantity: '5 kg',
+      category: 'Pantry',
+      addedByMemberId: 'member-themba',
+    });
   });
 });

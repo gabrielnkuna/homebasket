@@ -122,6 +122,27 @@ service cloud.firestore {
         memberId == request.auth.uid;
     }
 
+    function validMemberRoleUpdate(householdId, memberId) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']) &&
+        (
+          request.resource.data.role == 'Owner' ||
+          request.resource.data.role == 'Household member'
+        ) &&
+        (
+          (
+            memberId == request.auth.uid &&
+            resource.data.role == 'Owner' &&
+            request.resource.data.role == 'Household member'
+          ) ||
+          (
+            request.resource.data.role == 'Owner' &&
+            resource.data.role != 'Owner' &&
+            existsAfter(memberDocPath(householdId, request.auth.uid)) &&
+            getAfter(memberDocPath(householdId, request.auth.uid)).data.role == 'Household member'
+          )
+        );
+    }
+
     function validOwnerBootstrap(householdId, memberId) {
       return request.resource.data.role == 'Owner' &&
         existsAfter(householdPath(householdId)) &&
@@ -303,7 +324,9 @@ service cloud.firestore {
         allow create: if isSignedInAs(memberId) &&
           validMemberShape(memberId) &&
           (validOwnerBootstrap(householdId, memberId) || validInviteJoin(householdId));
-        allow update, delete: if false;
+        allow update: if isHouseholdOwner(householdId) &&
+          validMemberRoleUpdate(householdId, memberId);
+        allow delete: if false;
       }
 
       match /items/{itemId} {

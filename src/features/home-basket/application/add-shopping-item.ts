@@ -35,6 +35,6 @@ export function addShoppingItem(
 
   return {
     ...snapshot,
-    items: [item, ...snapshot.items],
+    items: [...snapshot.items, item],
   };
 }

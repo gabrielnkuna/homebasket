@@ -36,7 +36,7 @@ describe('manageShoppingReminders', () => {
     ).toBe('2026-04-02T12:00:00.000Z');
   });
 
-  it('adds a due reminder to the basket and advances its next due date', () => {
+  it('adds a due reminder to the bottom of the basket and advances its next due date', () => {
     const snapshot = createDemoHomeBasketSnapshot(new Date('2026-03-29T09:00:00.000Z'));
 
     const result = addShoppingReminderToBasket(snapshot, {
@@ -46,7 +46,7 @@ describe('manageShoppingReminders', () => {
       createItemId: () => 'item-from-reminder',
     });
 
-    expect(result.items[0]).toMatchObject({
+    expect(result.items.at(-1)).toMatchObject({
       id: 'item-from-reminder',
       name: 'Brown bread',
       addedByMemberId: 'member-themba',

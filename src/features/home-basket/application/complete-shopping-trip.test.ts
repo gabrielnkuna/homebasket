@@ -86,6 +86,39 @@ describe('completeShoppingTrip', () => {
     expect(result.items).toHaveLength(pendingOnlySnapshot.items.length);
   });
 
+  it('allows a purchase to be recorded without a total spend', () => {
+    const snapshot = createDemoHomeBasketSnapshot(new Date('2026-03-29T09:00:00.000Z'));
+
+    const result = completeShoppingTrip(snapshot, {
+      store: 'Corner shop',
+      shopperMemberId: 'member-themba',
+      totalSpendCents: 0,
+      completedAt: '2026-03-29T10:15:00.000Z',
+    });
+
+    expect(result.trips[0]).toMatchObject({
+      store: 'Corner shop',
+      totalSpendCents: 0,
+    });
+  });
+
+  it('blocks empty purchases without items, receipt, or spend', () => {
+    const snapshot = createDemoHomeBasketSnapshot(new Date('2026-03-29T09:00:00.000Z'));
+    const pendingOnlySnapshot = {
+      ...snapshot,
+      items: snapshot.items.map((item) => ({ ...item, status: 'pending' as const })),
+    };
+
+    expect(() =>
+      completeShoppingTrip(pendingOnlySnapshot, {
+        store: '',
+        shopperMemberId: 'member-themba',
+        totalSpendCents: 0,
+        completedAt: '2026-03-29T10:15:00.000Z',
+      })
+    ).toThrow('Add at least one purchased item, attach a receipt, or enter a total before recording this purchase.');
+  });
+
   it('appends reviewed receipt items to bought basket items without duplicating exact matches', () => {
     const snapshot = createDemoHomeBasketSnapshot(new Date('2026-03-29T09:00:00.000Z'));
 

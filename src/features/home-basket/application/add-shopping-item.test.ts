@@ -4,7 +4,7 @@ import { addShoppingItem } from '@/features/home-basket/application/add-shopping
 import { createDemoHomeBasketSnapshot } from '@/features/home-basket/infrastructure/demo/create-demo-home-basket-snapshot';
 
 describe('addShoppingItem', () => {
-  it('creates a trimmed item at the top of the list', () => {
+  it('creates a trimmed item at the bottom of the list', () => {
     const snapshot = createDemoHomeBasketSnapshot(new Date('2026-03-29T09:00:00.000Z'));
 
     const result = addShoppingItem(snapshot, {
@@ -16,7 +16,7 @@ describe('addShoppingItem', () => {
       createId: () => 'item-new',
     });
 
-    expect(result.items[0]).toMatchObject({
+    expect(result.items.at(-1)).toMatchObject({
       id: 'item-new',
       name: 'Dish soap',
       quantity: '1 bottle',
@@ -37,6 +37,6 @@ describe('addShoppingItem', () => {
       createId: () => 'item-eggs',
     });
 
-    expect(result.items[0]?.quantity).toBe('1');
+    expect(result.items.at(-1)?.quantity).toBe('1');
   });
 });
