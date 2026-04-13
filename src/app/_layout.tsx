@@ -66,6 +66,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const pathname = usePathname();
   const initialize = useHomeBasketStore((state) => state.initialize);
+  const retryBootstrap = useHomeBasketStore((state) => state.retryBootstrap);
   const session = useHomeBasketStore((state) => state.session);
   const snapshot = useHomeBasketStore((state) => state.snapshot);
   const isReady = useHomeBasketStore((state) => state.isReady);
@@ -91,6 +92,56 @@ export default function RootLayout() {
 
     void initialize();
   }, [initialize, isPublicInfoRoute]);
+
+  useEffect(() => {
+    if (isPublicInfoRoute || isReady || !isBootstrapping) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      const latestState = useHomeBasketStore.getState();
+
+      if (!latestState.isReady && latestState.isBootstrapping) {
+        void latestState.retryBootstrap();
+      }
+    }, 12000);
+
+    return () => clearTimeout(timeout);
+  }, [isBootstrapping, isPublicInfoRoute, isReady]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined' || isPublicInfoRoute) {
+      return;
+    }
+
+    const recoverIfBootstrapStalled = () => {
+      const latestState = useHomeBasketStore.getState();
+
+      if (!latestState.isReady && latestState.isBootstrapping) {
+        void latestState.retryBootstrap();
+        return;
+      }
+
+      if (!latestState.isReady) {
+        void latestState.initialize();
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        recoverIfBootstrapStalled();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', recoverIfBootstrapStalled);
+    window.addEventListener('pageshow', recoverIfBootstrapStalled);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', recoverIfBootstrapStalled);
+      window.removeEventListener('pageshow', recoverIfBootstrapStalled);
+    };
+  }, [isPublicInfoRoute, retryBootstrap]);
 
   useEffect(() => {
     if (typeof document === 'undefined') {

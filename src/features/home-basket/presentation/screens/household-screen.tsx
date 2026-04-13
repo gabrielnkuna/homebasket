@@ -167,7 +167,7 @@ export default function HouseholdScreen() {
   return (
     <ScreenShell
       eyebrow="Household"
-      title="Who is shopping this week?"
+      title="Household management"
       swipeNavigationEnabled
       subtitle="Invite members, manage budget settings, and keep the household in sync.">
       {error ? <MessageBanner message={error} tone="error" /> : null}

@@ -7,6 +7,7 @@ import {
   TabListProps,
 } from 'expo-router/ui';
 import React from 'react';
+import { usePathname } from 'expo-router';
 import {
   Pressable,
   StyleSheet,
@@ -17,11 +18,25 @@ import {
 } from 'react-native';
 
 import { Colors, Fonts, MaxContentWidth, Radii, Spacing } from '@/constants/theme';
+import { useHomeBasketStore } from '@/features/home-basket/presentation/use-home-basket-store';
 import { BrandBadge, BrandNavLockup } from '@/shared/ui';
 
 export default function AppTabs() {
+  const pathname = usePathname();
   const { width } = useWindowDimensions();
+  const clearError = useHomeBasketStore((state) => state.clearError);
+  const previousPathnameRef = React.useRef(pathname);
   const isCompactHeader = width < 640;
+
+  React.useEffect(() => {
+    if (previousPathnameRef.current !== pathname) {
+      previousPathnameRef.current = pathname;
+
+      if (useHomeBasketStore.getState().error) {
+        clearError();
+      }
+    }
+  }, [clearError, pathname]);
 
   return (
     <Tabs>

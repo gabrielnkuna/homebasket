@@ -12,6 +12,7 @@ import { usePathname, useRouter } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { Colors, Fonts, MaxContentWidth, Radii, Spacing } from '@/constants/theme';
+import { useHomeBasketStore } from '@/features/home-basket/presentation/use-home-basket-store';
 import { BrandBadge } from '@/shared/ui';
 
 const swipeRoutes = ['/', '/purchases', '/household'] as const;
@@ -19,6 +20,8 @@ const swipeRoutes = ['/', '/purchases', '/household'] as const;
 export default function AppTabs() {
   const pathname = usePathname();
   const router = useRouter();
+  const clearError = useHomeBasketStore((state) => state.clearError);
+  const previousPathnameRef = React.useRef(pathname);
   const activeSwipeIndex = (swipeRoutes as readonly string[]).indexOf(pathname);
   const nativeGesture = React.useMemo(() => Gesture.Native(), []);
   const swipeGesture = React.useMemo(
@@ -46,6 +49,16 @@ export default function AppTabs() {
         }),
     [activeSwipeIndex, nativeGesture, pathname, router]
   );
+
+  React.useEffect(() => {
+    if (previousPathnameRef.current !== pathname) {
+      previousPathnameRef.current = pathname;
+
+      if (useHomeBasketStore.getState().error) {
+        clearError();
+      }
+    }
+  }, [clearError, pathname]);
 
   return (
     <Tabs>

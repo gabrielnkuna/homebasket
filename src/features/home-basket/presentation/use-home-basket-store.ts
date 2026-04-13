@@ -185,6 +185,7 @@ type HomeBasketStore = {
   linkAccountDraft: LinkAccountDraft;
   reminderDraft: ReminderDraft;
   initialize: () => Promise<void>;
+  retryBootstrap: () => Promise<void>;
   clearError: () => void;
   setFilter: (filter: ShoppingFilter) => void;
   setSelectedMember: (memberId: string) => void;
@@ -500,10 +501,7 @@ async function activateSession(
     void flushPendingItemStatusUpdatesForHousehold(activeSession.householdId, set);
   });
 
-  const invite = await accessRepository.getLatestInvite(activeSession.householdId);
-
   set({
-    invite,
     session: activeSession,
     selectedMemberId: activeSession.memberId,
     isReady: true,
@@ -512,6 +510,12 @@ async function activateSession(
   });
 
   await saveStoredHouseholdSession(activeSession);
+  void accessRepository
+    .getLatestInvite(activeSession.householdId)
+    .then((invite) => {
+      set({ invite });
+    })
+    .catch(() => undefined);
 }
 
 export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
@@ -589,6 +593,19 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
         isAnalyzingReceipt: false,
       });
     }
+  },
+  async retryBootstrap() {
+    if (get().isReady) {
+      return;
+    }
+
+    stopSubscription();
+    set({
+      isBootstrapping: false,
+      error: null,
+      notice: null,
+    });
+    await get().initialize();
   },
   clearError() {
     set({ error: null, notice: null });
