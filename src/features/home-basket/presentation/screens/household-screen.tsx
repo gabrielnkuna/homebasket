@@ -1,5 +1,6 @@
 import React from 'react';
 import { Linking, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { Fonts, Radii, Spacing } from '@/constants/theme';
 import {
@@ -34,6 +35,7 @@ import { getAppIconBadgeDebugInfoAsync } from '@/shared/notifications';
 
 export default function HouseholdScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const snapshot = useHomeBasketStore((state) => state.snapshot);
   const authSession = useHomeBasketStore((state) => state.authSession);
   const session = useHomeBasketStore((state) => state.session);
@@ -116,6 +118,12 @@ export default function HouseholdScreen() {
     },
     [transferOwnership]
   );
+  const handleAddShoppingItemFromHousehold = React.useCallback(() => {
+    router.navigate({
+      pathname: '/',
+      params: { addItem: String(Date.now()) },
+    });
+  }, [router]);
 
   React.useEffect(() => {
     setBudgetCycleAnchorDayInput(String(budgetCycleAnchorDay));
@@ -191,21 +199,10 @@ export default function HouseholdScreen() {
       title="Household management"
       swipeNavigationEnabled
       floatingAction={{
-        accessibilityLabel: invite ? 'Share household invite' : 'Generate household invite',
-        accessibilityHint: 'Lets another person join this household basket.',
-        disabled: isSaving,
-        onPress: () => {
-          if (inviteShareMessage) {
-            void Share.share({
-              message: inviteShareMessage,
-              url: HOME_BASKET_WEBSITE,
-              title: `Join ${snapshot.household.name}`,
-            });
-            return;
-          }
-
-          void createInvite();
-        },
+        accessibilityLabel: 'Add shopping item',
+        accessibilityHint: 'Opens the list and jumps to the add item form.',
+        label: 'Add item',
+        onPress: handleAddShoppingItemFromHousehold,
       }}
       subtitle="Invite members, manage budget settings, and keep the household in sync.">
       {error ? <MessageBanner message={error} tone="error" /> : null}

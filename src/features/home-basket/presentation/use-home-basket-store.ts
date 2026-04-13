@@ -1697,12 +1697,13 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
     const state = get();
     const snapshot = state.snapshot;
     const selectedMemberId = state.selectedMemberId;
+    const itemName = state.addItemDraft.name.trim();
 
     if (!snapshot || !selectedMemberId) {
       return;
     }
 
-    if (!state.addItemDraft.name.trim()) {
+    if (!itemName) {
       set({ error: 'Please enter an item name.', notice: null });
       return;
     }
@@ -1721,7 +1722,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
       set({
         addItemDraft: defaultAddItemDraft,
         isSaving: false,
-        notice: null,
+        notice: `${itemName} added to the basket.`,
       });
     } catch (error) {
       set({

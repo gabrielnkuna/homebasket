@@ -31,10 +31,12 @@ type ScreenShellProps = {
   floatingAction?: {
     accessibilityLabel: string;
     accessibilityHint?: string;
+    label?: string;
     disabled?: boolean;
     onPress: () => void;
     scrollTo?: 'top' | 'bottom';
   };
+  scrollToBottomSignal?: string | number | null;
 };
 
 export function ScreenShell({
@@ -49,6 +51,7 @@ export function ScreenShell({
   swipeNavigationEnabled = false,
   scrollToTopSignal = null,
   floatingAction,
+  scrollToBottomSignal = null,
 }: ScreenShellProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -88,6 +91,18 @@ export function ScreenShell({
 
     return () => cancelAnimationFrame(frame);
   }, [scrollToTopSignal]);
+
+  React.useEffect(() => {
+    if (!scrollToBottomSignal) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [scrollToBottomSignal]);
 
   const handleFloatingActionPress = React.useCallback(() => {
     if (!floatingAction || floatingAction.disabled) {
@@ -207,6 +222,7 @@ export function ScreenShell({
               onPress={handleFloatingActionPress}
               style={({ pressed }) => [
                 styles.floatingActionButton,
+                floatingAction.label ? styles.floatingActionButtonExtended : null,
                 Shadows.card,
                 {
                   backgroundColor: theme.primary,
@@ -214,7 +230,10 @@ export function ScreenShell({
                   opacity: floatingAction.disabled ? 0.45 : pressed ? 0.86 : 1,
                 },
               ]}>
-              <Text style={styles.floatingActionLabel}>+</Text>
+              <Text style={styles.floatingActionIcon}>+</Text>
+              {floatingAction.label ? (
+                <Text style={styles.floatingActionText}>{floatingAction.label}</Text>
+              ) : null}
             </Pressable>
           </View>
         </View>
@@ -322,11 +341,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  floatingActionLabel: {
+  floatingActionButtonExtended: {
+    width: 'auto',
+    minWidth: 62,
+    paddingHorizontal: Spacing.four,
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  floatingActionIcon: {
     marginTop: -2,
     fontFamily: Fonts.rounded,
-    fontSize: 34,
-    lineHeight: 38,
+    fontSize: 30,
+    lineHeight: 34,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  floatingActionText: {
+    fontFamily: Fonts.sans,
+    fontSize: 14,
     fontWeight: '800',
     color: '#FFFFFF',
   },

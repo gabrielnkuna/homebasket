@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import {
   Keyboard,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { Fonts, Radii, Spacing } from '@/constants/theme';
+import { resolveShoppingCategory } from '@/features/home-basket/application/resolve-shopping-category';
 import {
   ShoppingCategory,
   shoppingCategories,
@@ -62,8 +63,15 @@ function describeReminderDueDate(nextDueAt: string) {
   return `Due ${formatLongDate(nextDueAt)}`;
 }
 
+type LastAddedItemConfirmation = {
+  name: string;
+  quantity: string;
+  category: string;
+};
+
 export default function HomeScreen() {
   const theme = useTheme();
+  const searchParams = useLocalSearchParams<{ addItem?: string | string[] }>();
   const snapshot = useHomeBasketStore((state) => state.snapshot);
   const isReady = useHomeBasketStore((state) => state.isReady);
   const isSaving = useHomeBasketStore((state) => state.isSaving);
@@ -90,6 +98,13 @@ export default function HomeScreen() {
   const addItemQuantityInputRef = React.useRef<TextInput | null>(null);
   const addItemCustomCategoryInputRef = React.useRef<TextInput | null>(null);
   const [areRecurringStaplesExpanded, setAreRecurringStaplesExpanded] = React.useState(false);
+  const [lastAddedItemConfirmation, setLastAddedItemConfirmation] =
+    React.useState<LastAddedItemConfirmation | null>(null);
+  const addItemRequest = Array.isArray(searchParams.addItem)
+    ? searchParams.addItem[0]
+    : searchParams.addItem;
+  const snapshotHouseholdId = snapshot?.household.id ?? null;
+  const snapshotMemberCount = snapshot?.members.length ?? 0;
 
   const dismissAddItemFocus = React.useCallback(() => {
     addItemNameInputRef.current?.blur();
@@ -163,16 +178,49 @@ export default function HomeScreen() {
     [addReminderToBasket, dismissAddItemFocus]
   );
 
-  const handleAddItem = React.useCallback(() => {
+  const handleAddItem = React.useCallback(async () => {
+    const itemToConfirm = {
+      name: addItemDraft.name.trim(),
+      quantity: addItemDraft.quantity.trim() || '1',
+      category: resolveShoppingCategory(addItemDraft.category, addItemDraft.customCategory),
+    };
+
     dismissAddItemFocus();
     setFilter('all');
-    void addItem();
-  }, [addItem, dismissAddItemFocus, setFilter]);
+    await addItem();
+
+    const latestState = useHomeBasketStore.getState();
+
+    if (!latestState.error && itemToConfirm.name) {
+      setLastAddedItemConfirmation(itemToConfirm);
+    }
+  }, [
+    addItem,
+    addItemDraft.category,
+    addItemDraft.customCategory,
+    addItemDraft.name,
+    addItemDraft.quantity,
+    dismissAddItemFocus,
+    setFilter,
+  ]);
 
   const handleOpenAddItemComposer = React.useCallback(() => {
     setFilter('all');
     addItemNameInputRef.current?.focus();
   }, [setFilter]);
+
+  React.useEffect(() => {
+    if (!addItemRequest || !snapshotHouseholdId || snapshotMemberCount === 0) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setFilter('all');
+      addItemNameInputRef.current?.focus();
+    }, 320);
+
+    return () => clearTimeout(timeout);
+  }, [addItemRequest, setFilter, snapshotHouseholdId, snapshotMemberCount]);
 
   if (!snapshot) {
     return (
@@ -238,6 +286,7 @@ export default function HomeScreen() {
     ? 'Home Basket is learning the things this household buys often, so you can re-add them in one tap.'
     : 'Collapsed so the active basket stays easy to reach. Open it when you want quick re-add ideas.';
   const shouldFocusNotice =
+    notice?.includes('added to the basket') ||
     notice?.includes('added back to the basket') ||
     notice?.includes('already reflected on the active basket');
 
@@ -271,6 +320,11 @@ export default function HomeScreen() {
               const addedBy = snapshot.members.find((member) => member.id === item.addedByMemberId);
               const isBought = item.status === 'bought';
               const isEditing = editingItemId === item.id;
+              const isJustAdded =
+                !isBought &&
+                lastAddedItemConfirmation?.name === item.name &&
+                lastAddedItemConfirmation.quantity === item.quantity &&
+                lastAddedItemConfirmation.category === item.category;
 
               return (
                 <View
@@ -279,8 +333,9 @@ export default function HomeScreen() {
                     styles.itemRow,
                     {
                       backgroundColor: isBought ? theme.primarySoft : theme.surface,
-                      borderColor: theme.border,
+                      borderColor: isJustAdded ? theme.accent : theme.border,
                     },
+                    isJustAdded ? styles.justAddedItemRow : null,
                   ]}>
                   <View style={styles.itemCopy}>
                     {isEditing ? (
@@ -370,6 +425,19 @@ export default function HomeScreen() {
                           </View>
                         </View>
                         <View style={styles.itemDetailsRow}>
+                          {isJustAdded ? (
+                            <Text
+                              style={[
+                                styles.justAddedPill,
+                                {
+                                  backgroundColor: theme.accentSoft,
+                                  borderColor: theme.accent,
+                                  color: theme.text,
+                                },
+                              ]}>
+                              Just added
+                            </Text>
+                          ) : null}
                           <Text
                             style={[
                               styles.itemQuantityLabel,
@@ -639,9 +707,11 @@ export default function HomeScreen() {
       title={snapshot.household.name}
       swipeNavigationEnabled
       scrollToTopSignal={shouldFocusNotice ? notice : null}
+      scrollToBottomSignal={addItemRequest ?? null}
       floatingAction={{
         accessibilityLabel: 'Add shopping item',
         accessibilityHint: 'Jumps to the add item form.',
+        label: 'Add item',
         onPress: handleOpenAddItemComposer,
         scrollTo: hasBasketItems ? 'bottom' : undefined,
       }}
@@ -675,6 +745,37 @@ export default function HomeScreen() {
 
       {error ? <MessageBanner message={error} tone="error" /> : null}
       {!error && notice ? <MessageBanner message={notice} /> : null}
+
+      {lastAddedItemConfirmation ? (
+        <SectionCard
+          title="Added to active basket"
+          description="The item is saved. It will appear in the live basket as soon as sync finishes."
+          tone="accent">
+          <View
+            style={[
+              styles.justAddedCard,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+              },
+            ]}>
+            <View style={styles.suggestionCopy}>
+              <Text style={[styles.suggestionName, { color: theme.text }]}>
+                {lastAddedItemConfirmation.name}
+              </Text>
+              <Text style={[styles.suggestionMeta, { color: theme.textMuted }]}>
+                Qty {lastAddedItemConfirmation.quantity} - {lastAddedItemConfirmation.category}
+              </Text>
+            </View>
+            <ActionButton
+              label="Add another"
+              tone="secondary"
+              onPress={handleOpenAddItemComposer}
+              disabled={isSaving}
+            />
+          </View>
+        </SectionCard>
+      ) : null}
 
       {model.dashboard.boughtItemsCount > 0 ? (
         <SectionCard
@@ -811,6 +912,15 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     gap: Spacing.three,
   },
+  justAddedItemRow: {
+    borderWidth: 2,
+  },
+  justAddedCard: {
+    borderWidth: 1,
+    borderRadius: Radii.medium,
+    padding: Spacing.three,
+    gap: Spacing.three,
+  },
   itemCopy: {
     gap: Spacing.one,
   },
@@ -840,6 +950,16 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   itemQuantityLabel: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderRadius: Radii.pill,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 4,
+    fontFamily: Fonts.sans,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  justAddedPill: {
     overflow: 'hidden',
     borderWidth: 1,
     borderRadius: Radii.pill,
