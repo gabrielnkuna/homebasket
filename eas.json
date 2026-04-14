@@ -38,6 +38,7 @@
       }
     },
     "production": {
+      "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_ADS_ENABLED": "true",
         "EXPO_PUBLIC_ADMOB_USE_TEST_IDS": "false",

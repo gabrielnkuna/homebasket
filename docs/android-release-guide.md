@@ -59,6 +59,8 @@ This repo now has these EAS profiles:
 - `submit.internal`: submit to internal testing track
 - `submit.production`: submit to production track
 
+The `production` build profile auto-increments Android version codes, so each new Play Store AAB can be uploaded without colliding with a previous release.
+
 ## Recommended first-release flow
 
 1. Keep the Android package name in `app.json` as `com.transcripe.homebasket`.
@@ -111,6 +113,40 @@ Submit to production:
 
 ```bash
 eas submit --platform android --profile production
+```
+
+## PowerShell scripts
+
+On Windows, use these repo scripts from PowerShell:
+
+Check the latest Android version stored by EAS:
+
+```powershell
+.\scripts\mobile-android-version.ps1
+```
+
+Build a new production Android App Bundle:
+
+```powershell
+.\scripts\mobile-android-production.ps1
+```
+
+Submit the latest Android App Bundle to internal testing:
+
+```powershell
+.\scripts\mobile-android-submit-internal.ps1
+```
+
+Build and auto-submit to internal testing in one step:
+
+```powershell
+.\scripts\mobile-android-release-internal.ps1
+```
+
+Recommended for the next internal-testing build:
+
+```powershell
+.\scripts\mobile-android-release-internal.ps1
 ```
 
 ## Service account note
