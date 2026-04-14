@@ -1722,7 +1722,7 @@ export const useHomeBasketStore = create<HomeBasketStore>((set, get) => ({
       set({
         addItemDraft: defaultAddItemDraft,
         isSaving: false,
-        notice: `${itemName} added to the basket.`,
+        notice: null,
       });
     } catch (error) {
       set({

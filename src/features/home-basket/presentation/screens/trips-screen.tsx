@@ -53,7 +53,9 @@ export default function TripsScreen() {
   const isAnalyzingReceipt = useHomeBasketStore((state) => state.isAnalyzingReceipt);
   const error = useHomeBasketStore((state) => state.error);
   const notice = useHomeBasketStore((state) => state.notice);
+  const readyItemsSectionRef = React.useRef<View | null>(null);
   const [expandedPurchaseItemIds, setExpandedPurchaseItemIds] = React.useState<string[]>([]);
+  const [readyItemsScrollSignal, setReadyItemsScrollSignal] = React.useState<number | null>(null);
   const togglePurchaseItemsExpanded = React.useCallback((tripId: string) => {
     setExpandedPurchaseItemIds((currentTripIds) =>
       currentTripIds.includes(tripId)
@@ -99,6 +101,9 @@ export default function TripsScreen() {
     },
     [addTripItemBackToBasket, router, setFilter]
   );
+  const handleOpenReadyItems = React.useCallback(() => {
+    setReadyItemsScrollSignal(Date.now());
+  }, []);
   const handleAddShoppingItemFromPurchases = React.useCallback(() => {
     setFilter('all');
     router.navigate({
@@ -157,6 +162,9 @@ export default function TripsScreen() {
       eyebrow="Purchases"
       title="Record a purchase"
       swipeNavigationEnabled
+      scrollTargetOffset={96}
+      scrollTargetRef={readyItemsSectionRef}
+      scrollToTargetSignal={readyItemsScrollSignal}
       floatingAction={{
         accessibilityLabel: 'Add shopping item',
         accessibilityHint: 'Opens the list and jumps to the add item form.',
@@ -180,6 +188,10 @@ export default function TripsScreen() {
           label="Ready items"
           value={String(model.readyItems.length)}
           helper="Bought items waiting to be cleared"
+          accessibilityHint={
+            model.readyItems.length > 0 ? 'Jumps to bought basket items in this purchase.' : undefined
+          }
+          onPress={model.readyItems.length > 0 ? handleOpenReadyItems : undefined}
           tone="primary"
         />
         <MetricCard
@@ -400,7 +412,10 @@ export default function TripsScreen() {
             included something that was not on the shared list.
           </Text>
 
-          <View style={styles.purchaseReviewGroup}>
+          <View
+            ref={readyItemsSectionRef}
+            collapsable={false}
+            style={styles.purchaseReviewGroup}>
             <Text style={[styles.receiptPreviewTitle, { color: theme.text }]}>
               Bought from basket
             </Text>

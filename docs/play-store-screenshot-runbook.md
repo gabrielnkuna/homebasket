@@ -16,7 +16,7 @@ Capture a polished screenshot set from the real app UI that tells a clear MVP st
 
 Recommended export target:
 
-- `1080 x 2400`
+- `1080 x 1920`
 - PNG
 - portrait
 
@@ -125,20 +125,21 @@ Goal:
 
 Filename:
 
-- `branding/play-store/screenshot-03-bought-items.png`
+- `branding/play-store/screenshot-03-add-item.png`
 
 Headline:
 
-- `Mark items bought while you shop`
+- `Add a new item in seconds`
 
 Show:
 
-- List screen with a mix of pending and bought items
-- enough visual contrast to make state changes obvious
+- List screen with the add item card
+- category pills and quick quantity entry
+- the floating add action visible
 
 Goal:
 
-- show shared shopping flow in action
+- show how fast a household can add a needed item
 
 ### Screenshot 4
 
@@ -165,42 +166,42 @@ Goal:
 
 Filename:
 
-- `branding/play-store/screenshot-05-budget-cycle.png`
+- `branding/play-store/screenshot-05-household.png`
 
 Headline:
 
-- `Track spending by pay-day cycle`
+- `Manage the household in one place`
 
 Show:
 
 - Household screen
-- cycle budget
-- pay day
-- current cycle range
-- estimated spend mix
+- invite sharing
+- acting member controls
+- household settings
 
 Goal:
 
-- show what makes Home Basket more disciplined than a plain list app
+- show that Home Basket handles more than just the list
 
 ### Screenshot 6
 
 Filename:
 
-- `branding/play-store/screenshot-06-reminders.png`
+- `branding/play-store/screenshot-06-budget.png`
 
 Headline:
 
-- `Bring recurring staples back in one tap`
+- `Track the monthly budget when ready`
 
 Show:
 
-- reminders section or recurring suggestions
-- items like dog food, bread, bleach, or toiletries
+- monthly budget controls
+- pay-day cycle settings
+- current household currency
 
 Goal:
 
-- show the convenience loop
+- show optional spend tracking without making setup heavy
 
 ## Capture workflow
 

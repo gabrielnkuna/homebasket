@@ -41,6 +41,9 @@ type ScreenShellProps = {
   contentStyle?: StyleProp<ViewStyle>;
   swipeNavigationEnabled?: boolean;
   scrollToTopSignal?: string | number | null;
+  scrollTargetOffset?: number;
+  scrollTargetRef?: React.RefObject<View | null>;
+  scrollToTargetSignal?: string | number | null;
   floatingAction?: {
     accessibilityLabel: string;
     accessibilityHint?: string;
@@ -65,6 +68,9 @@ export function ScreenShell({
   contentStyle,
   swipeNavigationEnabled = false,
   scrollToTopSignal = null,
+  scrollTargetOffset = Spacing.four,
+  scrollTargetRef,
+  scrollToTargetSignal = null,
   floatingAction,
   scrollToBottomSignal = null,
 }: ScreenShellProps) {
@@ -96,8 +102,11 @@ export function ScreenShell({
     default: undefined,
   });
 
-  const scrollToFloatingActionTarget = React.useCallback(() => {
-    const target = floatingAction?.scrollTargetRef?.current;
+  const scrollToMeasuredTarget = React.useCallback((
+    targetRef: React.RefObject<View | null> | undefined,
+    targetOffset: number = Spacing.four
+  ) => {
+    const target = targetRef?.current;
     const scrollView = scrollRef.current;
 
     if (!target || !scrollView) {
@@ -118,7 +127,6 @@ export function ScreenShell({
         (_scrollX, _scrollY, _scrollWidth, _scrollHeight, _scrollPageX, scrollPageY) => {
           measureTarget(
             (_targetX, _targetY, _targetWidth, _targetHeight, _targetPageX, targetPageY) => {
-              const targetOffset = floatingAction.scrollTargetOffset ?? Spacing.four;
               const y = Math.max(0, scrollYRef.current + targetPageY - scrollPageY - targetOffset);
 
               scrollView.scrollTo({ y, animated: true });
@@ -130,7 +138,14 @@ export function ScreenShell({
     } catch {
       return false;
     }
-  }, [floatingAction]);
+  }, []);
+
+  const scrollToFloatingActionTarget = React.useCallback(() => {
+    return scrollToMeasuredTarget(
+      floatingAction?.scrollTargetRef,
+      floatingAction?.scrollTargetOffset ?? Spacing.four
+    );
+  }, [floatingAction?.scrollTargetOffset, floatingAction?.scrollTargetRef, scrollToMeasuredTarget]);
 
   React.useEffect(() => {
     if (!scrollToTopSignal) {
@@ -173,6 +188,29 @@ export function ScreenShell({
       frames.forEach(cancelAnimationFrame);
     };
   }, [floatingAction?.scrollTargetRef, scrollToBottomSignal, scrollToFloatingActionTarget]);
+
+  React.useEffect(() => {
+    if (!scrollToTargetSignal || !scrollTargetRef) {
+      return;
+    }
+
+    const retryDelays = Platform.select({ web: [0, 80], default: [100, 260, 520, 820] }) ?? [0];
+    const frames: number[] = [];
+    const timers = retryDelays.map((delay) =>
+      setTimeout(() => {
+        const frame = requestAnimationFrame(() => {
+          scrollToMeasuredTarget(scrollTargetRef, scrollTargetOffset);
+        });
+
+        frames.push(frame);
+      }, delay)
+    );
+
+    return () => {
+      timers.forEach(clearTimeout);
+      frames.forEach(cancelAnimationFrame);
+    };
+  }, [scrollTargetOffset, scrollTargetRef, scrollToMeasuredTarget, scrollToTargetSignal]);
 
   const handleFloatingActionPress = React.useCallback(() => {
     if (!floatingAction || floatingAction.disabled) {

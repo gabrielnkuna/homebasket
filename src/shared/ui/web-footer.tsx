@@ -6,6 +6,7 @@ import { Fonts, MaxContentWidth, Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   HOME_BASKET_ROUTES,
+  HOME_BASKET_SOCIAL_LINKS,
 } from '@/shared/config/app-links';
 
 export function WebFooter() {
@@ -13,6 +14,10 @@ export function WebFooter() {
 
   const openWebPath = React.useCallback((path: string) => {
     globalThis.location.assign(path);
+  }, []);
+
+  const openExternalUrl = React.useCallback((url: string) => {
+    globalThis.open(url, '_blank', 'noopener,noreferrer');
   }, []);
 
   if (Platform.OS !== 'web') {
@@ -59,6 +64,31 @@ export function WebFooter() {
           style={styles.footerLink}>
           <Text style={[styles.footerLinkText, { color: theme.textMuted }]}>Delete account</Text>
         </Pressable>
+      </View>
+
+      <View style={styles.socialBlock}>
+        <Text style={[styles.socialTitle, { color: theme.textMuted }]}>Follow Home Basket</Text>
+        <View style={styles.socialLinks}>
+          {HOME_BASKET_SOCIAL_LINKS.map((socialLink) => (
+            <Pressable
+              key={socialLink.url}
+              accessibilityRole="link"
+              accessibilityLabel={`Open Home Basket on ${socialLink.label}`}
+              onPress={() => openExternalUrl(socialLink.url)}
+              style={({ pressed }) => [
+                styles.socialLink,
+                {
+                  backgroundColor: theme.surfaceMuted,
+                  borderColor: theme.border,
+                  opacity: pressed ? 0.82 : 1,
+                },
+              ]}>
+              <Text style={[styles.socialLinkText, { color: theme.text }]}>
+                {socialLink.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
 
       <View style={styles.downloadRow}>
@@ -126,6 +156,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.three,
+  },
+  socialBlock: {
+    gap: Spacing.two,
+  },
+  socialTitle: {
+    fontFamily: Fonts.sans,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+  },
+  socialLinks: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  socialLink: {
+    borderWidth: 1,
+    borderRadius: Radii.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  socialLinkText: {
+    fontFamily: Fonts.sans,
+    fontSize: 13,
+    fontWeight: '800',
   },
   downloadBadge: {
     minWidth: 184,

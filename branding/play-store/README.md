@@ -5,14 +5,15 @@ Put final Android Play Store marketing assets here.
 ## Current final files
 
 - `feature_graphic.jpg`
+- `feature_graphic_24bit.png`
 - `screenshot-01-onboarding.png`
-- `screenshot-02-dashboard.png`
-- `screenshot-03-active-basket.png`
+- `screenshot-02-list.png`
+- `screenshot-03-add-item.png`
 - `screenshot-04-purchases.png`
 - `screenshot-05-household.png`
-- `screenshot-06-reminders.png`
+- `screenshot-06-budget.png`
 
-The revised asset pack from Manus is approved for first submission and the Android screenshot set has been committed here for Play Console upload.
+The MVP asset pack is approved for first submission and the Android screenshot set has been committed here for Play Console upload.
 
 ## Working references
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts, Radii, Shadows, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -9,6 +9,8 @@ type MetricCardProps = {
   value: string;
   helper?: string;
   tone?: 'default' | 'primary' | 'accent';
+  accessibilityHint?: string;
+  onPress?: () => void;
 };
 
 export function MetricCard({
@@ -16,6 +18,8 @@ export function MetricCard({
   value,
   helper,
   tone = 'default',
+  accessibilityHint,
+  onPress,
 }: MetricCardProps) {
   const theme = useTheme();
 
@@ -25,19 +29,44 @@ export function MetricCard({
     accent: theme.accentSoft,
   }[tone];
 
-  return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor,
-          borderColor: theme.border,
-        },
-        Shadows.card,
-      ]}>
+  const cardContent = (
+    <>
       <Text style={[styles.label, { color: theme.textMuted }]}>{label}</Text>
       <Text style={[styles.value, { color: theme.text }]}>{value}</Text>
       {helper ? <Text style={[styles.helper, { color: theme.textMuted }]}>{helper}</Text> : null}
+    </>
+  );
+
+  const cardStyle = [
+    styles.card,
+    {
+      backgroundColor,
+      borderColor: theme.border,
+    },
+    Shadows.card,
+  ];
+
+  if (onPress) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityHint={accessibilityHint}
+        onPress={onPress}
+        style={({ pressed }) => [
+          cardStyle,
+          {
+            opacity: pressed ? 0.86 : 1,
+          },
+        ]}>
+        {cardContent}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View
+      style={cardStyle}>
+      {cardContent}
     </View>
   );
 }

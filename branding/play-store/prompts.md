@@ -82,7 +82,7 @@ Use these exact lines:
 
 - Shared shopping for the whole household
 - Add items fast and keep everyone aligned
-- Mark items bought while you shop
+- Add a new item in seconds
 - Record purchases with receipt proof
+- Manage the household in one place
 - Track spending by pay-day cycle
-- Bring recurring staples back in one tap

@@ -24,7 +24,7 @@ Use these hard requirements from Google Play:
 
 Recommended for Home Basket:
 
-- phone screenshots at `1080 x 2400`
+- current MVP phone screenshots at `1080 x 1920`
 - export PNG
 - keep text large and high contrast
 
@@ -135,10 +135,10 @@ The first release should tell a simple story:
 
 1. create or join a household
 2. add items quickly
-3. organize by category
+3. add a needed item in seconds
 4. record purchases with proof
-5. track the payday budget cycle
-6. keep staples on repeat
+5. manage household settings and invites
+6. track the payday budget cycle when ready
 
 ## Recommended screenshot set
 
@@ -169,12 +169,13 @@ Show:
 
 Title:
 
-- `Mark items bought while you shop`
+- `Add a new item in seconds`
 
 Show:
 
-- active basket with pending and bought states
-- a realistic household list
+- add item card
+- category pills
+- a realistic household item
 
 ### Screenshot 4
 
@@ -192,24 +193,26 @@ Show:
 
 Title:
 
-- `Track spending by pay-day cycle`
+- `Manage the household in one place`
 
 Show:
 
 - Household screen
-- cycle budget
-- current cycle window
-- spend mix
+- invite sharing
+- acting member controls
+- household settings
 
 ### Screenshot 6
 
 Title:
 
-- `Bring recurring staples back in one tap`
+- `Track spending by pay-day cycle`
 
 Show:
 
-- reminders or recurring staple suggestions
+- monthly budget
+- current cycle window
+- spend settings
 
 ## Screenshot content guidance
 
@@ -227,9 +230,9 @@ Suggested outputs:
 - `branding/play-store/homebasket-feature-graphic.png`
 - `branding/play-store/screenshot-01-onboarding.png`
 - `branding/play-store/screenshot-02-list.png`
-- `branding/play-store/screenshot-03-bought-items.png`
+- `branding/play-store/screenshot-03-add-item.png`
 - `branding/play-store/screenshot-04-purchases.png`
-- `branding/play-store/screenshot-05-budget-cycle.png`
-- `branding/play-store/screenshot-06-reminders.png`
+- `branding/play-store/screenshot-05-household.png`
+- `branding/play-store/screenshot-06-budget.png`
 
 For a full step-by-step capture process, use [play-store-screenshot-runbook.md](./play-store-screenshot-runbook.md).

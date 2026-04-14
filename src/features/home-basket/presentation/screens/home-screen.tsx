@@ -1,4 +1,4 @@
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import {
   InteractionManager,
@@ -70,8 +70,11 @@ type LastAddedItemConfirmation = {
   category: string;
 };
 
+type HomeScrollTarget = 'active-basket' | 'just-added';
+
 export default function HomeScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const searchParams = useLocalSearchParams<{ addItem?: string | string[] }>();
   const snapshot = useHomeBasketStore((state) => state.snapshot);
   const isReady = useHomeBasketStore((state) => state.isReady);
@@ -99,15 +102,36 @@ export default function HomeScreen() {
   const addItemQuantityInputRef = React.useRef<TextInput | null>(null);
   const addItemCustomCategoryInputRef = React.useRef<TextInput | null>(null);
   const addItemSectionRef = React.useRef<View | null>(null);
+  const activeBasketSectionRef = React.useRef<View | null>(null);
+  const justAddedItemRef = React.useRef<View | null>(null);
+  const lastScrolledJustAddedItemIdRef = React.useRef<string | null>(null);
   const scheduledAddItemFocusCleanupRef = React.useRef<(() => void) | null>(null);
   const [areRecurringStaplesExpanded, setAreRecurringStaplesExpanded] = React.useState(false);
   const [lastAddedItemConfirmation, setLastAddedItemConfirmation] =
     React.useState<LastAddedItemConfirmation | null>(null);
+  const [scrollTarget, setScrollTarget] = React.useState<{
+    signal: number;
+    target: HomeScrollTarget;
+  } | null>(null);
   const addItemRequest = Array.isArray(searchParams.addItem)
     ? searchParams.addItem[0]
     : searchParams.addItem;
   const snapshotHouseholdId = snapshot?.household.id ?? null;
   const snapshotMemberCount = snapshot?.members.length ?? 0;
+  const lastAddedActiveItem = React.useMemo(() => {
+    if (!snapshot || !lastAddedItemConfirmation) {
+      return null;
+    }
+
+    return [...snapshot.items]
+      .reverse()
+      .find(
+        (item) =>
+          item.name === lastAddedItemConfirmation.name &&
+          item.quantity === lastAddedItemConfirmation.quantity &&
+          item.category === lastAddedItemConfirmation.category
+      ) ?? null;
+  }, [lastAddedItemConfirmation, snapshot]);
 
   const dismissAddItemFocus = React.useCallback(() => {
     addItemNameInputRef.current?.blur();
@@ -150,12 +174,42 @@ export default function HomeScreen() {
     };
   }, []);
 
+  const requestScrollToActiveBasket = React.useCallback(() => {
+    setScrollTarget({ signal: Date.now(), target: 'active-basket' });
+  }, []);
+
+  const requestScrollToJustAddedItem = React.useCallback(() => {
+    setScrollTarget({ signal: Date.now(), target: 'just-added' });
+  }, []);
+
   React.useEffect(
     () => () => {
       scheduledAddItemFocusCleanupRef.current?.();
     },
     []
   );
+
+  React.useEffect(() => {
+    if (!lastAddedActiveItem?.id) {
+      return;
+    }
+
+    if (lastScrolledJustAddedItemIdRef.current === lastAddedActiveItem.id) {
+      return;
+    }
+
+    lastScrolledJustAddedItemIdRef.current = lastAddedActiveItem.id;
+    requestScrollToJustAddedItem();
+  }, [lastAddedActiveItem?.id, requestScrollToJustAddedItem]);
+
+  React.useEffect(() => {
+    const itemWasRemoved = notice?.includes('removed from the basket');
+
+    if (lastAddedItemConfirmation && itemWasRemoved && !lastAddedActiveItem) {
+      setLastAddedItemConfirmation(null);
+      lastScrolledJustAddedItemIdRef.current = null;
+    }
+  }, [lastAddedActiveItem, lastAddedItemConfirmation, notice]);
 
   const handleSetFilter = React.useCallback(
     (nextFilter: (typeof shoppingFilters)[number]) => {
@@ -188,18 +242,28 @@ export default function HomeScreen() {
 
   const handleDeleteItem = React.useCallback(
     (itemId: string) => {
+      if (lastAddedActiveItem?.id === itemId) {
+        setLastAddedItemConfirmation(null);
+        lastScrolledJustAddedItemIdRef.current = null;
+      }
+
       dismissAddItemFocus();
       void deleteItem(itemId);
     },
-    [deleteItem, dismissAddItemFocus]
+    [deleteItem, dismissAddItemFocus, lastAddedActiveItem?.id]
   );
 
   const handleToggleItemStatus = React.useCallback(
     (itemId: string) => {
+      if (lastAddedActiveItem?.id === itemId) {
+        setLastAddedItemConfirmation(null);
+        lastScrolledJustAddedItemIdRef.current = null;
+      }
+
       dismissAddItemFocus();
       void toggleItemStatus(itemId);
     },
-    [dismissAddItemFocus, toggleItemStatus]
+    [dismissAddItemFocus, lastAddedActiveItem?.id, toggleItemStatus]
   );
 
   const handleAddSuggestedItem = React.useCallback(
@@ -236,6 +300,7 @@ export default function HomeScreen() {
     const latestState = useHomeBasketStore.getState();
 
     if (!latestState.error && itemToConfirm.name) {
+      lastScrolledJustAddedItemIdRef.current = null;
       setLastAddedItemConfirmation(itemToConfirm);
     }
   }, [
@@ -247,6 +312,41 @@ export default function HomeScreen() {
     dismissAddItemFocus,
     setFilter,
   ]);
+
+  const handleOpenPendingItems = React.useCallback(() => {
+    dismissAddItemFocus();
+    setFilter('pending');
+    requestScrollToActiveBasket();
+  }, [dismissAddItemFocus, requestScrollToActiveBasket, setFilter]);
+
+  const handleOpenReadyItems = React.useCallback(() => {
+    dismissAddItemFocus();
+
+    if (lastAddedItemConfirmation) {
+      setLastAddedItemConfirmation(null);
+      lastScrolledJustAddedItemIdRef.current = null;
+    }
+
+    if (snapshot?.items.some((item) => item.status === 'bought')) {
+      setFilter('bought');
+      requestScrollToActiveBasket();
+      return;
+    }
+
+    router.navigate('/purchases');
+  }, [
+    dismissAddItemFocus,
+    lastAddedItemConfirmation,
+    requestScrollToActiveBasket,
+    router,
+    setFilter,
+    snapshot?.items,
+  ]);
+
+  const handleOpenBudgetSettings = React.useCallback(() => {
+    dismissAddItemFocus();
+    router.navigate('/household');
+  }, [dismissAddItemFocus, router]);
 
   const handleOpenAddItemComposer = React.useCallback(() => {
     setFilter('all');
@@ -336,57 +436,57 @@ export default function HomeScreen() {
     ? 'Home Basket is learning the things this household buys often, so you can re-add them in one tap.'
     : 'Collapsed so the active basket stays easy to reach. Open it when you want quick re-add ideas.';
   const shouldFocusNotice =
-    notice?.includes('added to the basket') ||
     notice?.includes('added back to the basket') ||
     notice?.includes('already reflected on the active basket');
+  const screenScrollTargetRef =
+    scrollTarget?.target === 'just-added' ? justAddedItemRef : activeBasketSectionRef;
 
   const activeBasketSection = (
-    <SectionCard
-      title="Active basket"
-      description="Use the filters to focus on pending or already-bought items.">
-      <View style={styles.rowWrap}>
-        {shoppingFilters.map((itemFilter) => (
-          <PillButton
-            key={itemFilter}
-            label={itemFilter === 'all' ? 'All items' : itemFilter === 'pending' ? 'Pending' : 'Bought'}
-            active={filter === itemFilter}
-            onPress={() => handleSetFilter(itemFilter)}
-          />
-        ))}
-      </View>
+    <View ref={activeBasketSectionRef} collapsable={false}>
+      <SectionCard
+        title="Active basket"
+        description="Use the filters to focus on pending or already-bought items.">
+        <View style={styles.rowWrap}>
+          {shoppingFilters.map((itemFilter) => (
+            <PillButton
+              key={itemFilter}
+              label={itemFilter === 'all' ? 'All items' : itemFilter === 'pending' ? 'Pending' : 'Bought'}
+              active={filter === itemFilter}
+              onPress={() => handleSetFilter(itemFilter)}
+            />
+          ))}
+        </View>
 
-      {model.groupedItems.length === 0 ? (
-        <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
-          No items match this filter yet.
-        </Text>
-      ) : (
-        model.groupedItems.map((group) => (
-          <View key={group.category} style={styles.groupBlock}>
-            <Text style={[styles.groupTitle, { color: theme.primaryStrong }]}>
-              {group.category}
-            </Text>
+        {model.groupedItems.length === 0 ? (
+          <Text style={[styles.emptyMessage, { color: theme.textMuted }]}>
+            No items match this filter yet.
+          </Text>
+        ) : (
+          model.groupedItems.map((group) => (
+            <View key={group.category} style={styles.groupBlock}>
+              <Text style={[styles.groupTitle, { color: theme.primaryStrong }]}>
+                {group.category}
+              </Text>
 
-            {group.items.map((item) => {
-              const addedBy = snapshot.members.find((member) => member.id === item.addedByMemberId);
-              const isBought = item.status === 'bought';
-              const isEditing = editingItemId === item.id;
-              const isJustAdded =
-                !isBought &&
-                lastAddedItemConfirmation?.name === item.name &&
-                lastAddedItemConfirmation.quantity === item.quantity &&
-                lastAddedItemConfirmation.category === item.category;
+              {group.items.map((item) => {
+                const addedBy = snapshot.members.find((member) => member.id === item.addedByMemberId);
+                const isBought = item.status === 'bought';
+                const isEditing = editingItemId === item.id;
+                const isJustAdded = lastAddedActiveItem?.id === item.id;
 
-              return (
-                <View
-                  key={item.id}
-                  style={[
-                    styles.itemRow,
-                    {
-                      backgroundColor: isBought ? theme.primarySoft : theme.accentSoft,
-                      borderColor: isJustAdded ? theme.accent : theme.border,
-                    },
-                    isJustAdded ? styles.justAddedItemRow : null,
-                  ]}>
+                return (
+                  <View
+                    key={item.id}
+                    ref={isJustAdded ? justAddedItemRef : undefined}
+                    collapsable={!isJustAdded}
+                    style={[
+                      styles.itemRow,
+                      {
+                        backgroundColor: isBought ? theme.primarySoft : theme.accentSoft,
+                        borderColor: isJustAdded ? theme.accent : theme.border,
+                      },
+                      isJustAdded ? styles.justAddedItemRow : null,
+                    ]}>
                   <View style={styles.itemCopy}>
                     {isEditing ? (
                       <View style={styles.editForm}>
@@ -559,8 +659,9 @@ export default function HomeScreen() {
             })}
           </View>
         ))
-      )}
-    </SectionCard>
+        )}
+      </SectionCard>
+    </View>
   );
 
   const addItemSection = (
@@ -769,6 +870,9 @@ export default function HomeScreen() {
       title={snapshot.household.name}
       swipeNavigationEnabled
       scrollToTopSignal={shouldFocusNotice ? notice : null}
+      scrollTargetOffset={Platform.OS === 'web' ? Spacing.four : 96}
+      scrollTargetRef={screenScrollTargetRef}
+      scrollToTargetSignal={scrollTarget?.signal ?? null}
       scrollToBottomSignal={addItemRequest ?? null}
       floatingAction={{
         accessibilityLabel: 'Add shopping item',
@@ -785,12 +889,24 @@ export default function HomeScreen() {
           label="Still to buy"
           value={String(model.dashboard.pendingItemsCount)}
           helper="Items staying on the active list"
+          accessibilityHint={
+            model.dashboard.pendingItemsCount > 0
+              ? 'Shows pending items in the active basket.'
+              : undefined
+          }
+          onPress={model.dashboard.pendingItemsCount > 0 ? handleOpenPendingItems : undefined}
           tone="primary"
         />
         <MetricCard
           label="Ready to close"
           value={String(model.dashboard.boughtItemsCount)}
           helper="Bought items waiting for purchase logging"
+          accessibilityHint={
+            model.dashboard.boughtItemsCount > 0
+              ? 'Shows bought items waiting to be recorded.'
+              : undefined
+          }
+          onPress={model.dashboard.boughtItemsCount > 0 ? handleOpenReadyItems : undefined}
         />
         <MetricCard
           label={hasBudget ? 'Budget left' : 'Monthly budget'}
@@ -803,6 +919,8 @@ export default function HomeScreen() {
               : 'Not set'
           }
           helper={hasBudget ? 'Remaining in this cycle' : 'Optional until you turn it on'}
+          accessibilityHint={hasBudget ? 'Opens household budget settings.' : undefined}
+          onPress={hasBudget ? handleOpenBudgetSettings : undefined}
           tone="accent"
         />
       </View>
@@ -810,10 +928,10 @@ export default function HomeScreen() {
       {error ? <MessageBanner message={error} tone="error" /> : null}
       {!error && notice ? <MessageBanner message={notice} /> : null}
 
-      {lastAddedItemConfirmation ? (
+      {lastAddedActiveItem ? (
         <SectionCard
           title="Added to active basket"
-          description="The item is saved. It will appear in the live basket as soon as sync finishes."
+          description="The item is saved and highlighted below in the active basket."
           tone="accent">
           <View
             style={[
@@ -825,10 +943,10 @@ export default function HomeScreen() {
             ]}>
             <View style={styles.suggestionCopy}>
               <Text style={[styles.suggestionName, { color: theme.text }]}>
-                {lastAddedItemConfirmation.name}
+                {lastAddedActiveItem.name}
               </Text>
               <Text style={[styles.suggestionMeta, { color: theme.textMuted }]}>
-                Qty {lastAddedItemConfirmation.quantity} - {lastAddedItemConfirmation.category}
+                Qty {lastAddedActiveItem.quantity} - {lastAddedActiveItem.category}
               </Text>
             </View>
             <ActionButton

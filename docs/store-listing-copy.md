@@ -97,20 +97,20 @@ This is the Play-safe JPEG export at `1024 x 500`.
 Use the final Android screenshot set in this order:
 
 1. Welcome / onboarding
-2. Dashboard / overview
-3. Active basket
+2. Active basket
+3. Add item
 4. Purchases with receipt proof
 5. Household and invite
-6. Reminders
+6. Monthly budget
 
 Recommended screenshot captions:
 
 - `Shared shopping list for the whole household`
 - `Add items fast and keep everyone aligned`
-- `Mark items bought while you shop`
+- `Add a new item in seconds`
 - `Record purchases with receipt proof`
+- `Manage the household in one place`
 - `Track spending by pay-day cycle`
-- `Bring recurring staples back in one tap`
 
 ## Public URLs
 

@@ -47,11 +47,11 @@ Upload assets:
 - Feature graphic: `branding/play-store/feature_graphic.jpg`
 - Phone screenshots:
   1. `branding/play-store/screenshot-01-onboarding.png`
-  2. `branding/play-store/screenshot-02-dashboard.png`
-  3. `branding/play-store/screenshot-03-active-basket.png`
+  2. `branding/play-store/screenshot-02-list.png`
+  3. `branding/play-store/screenshot-03-add-item.png`
   4. `branding/play-store/screenshot-04-purchases.png`
   5. `branding/play-store/screenshot-05-household.png`
-  6. `branding/play-store/screenshot-06-reminders.png`
+  6. `branding/play-store/screenshot-06-budget.png`
 
 ## 4. App access
 

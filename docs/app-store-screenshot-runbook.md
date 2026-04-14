@@ -115,20 +115,21 @@ Goal:
 
 Filename:
 
-- `branding/app-store/iphone-03-bought-items.png`
+- `branding/app-store/iphone-03-add-item.png`
 
 Headline:
 
-- `Mark items bought while you shop`
+- `Add a new item in seconds`
 
 Show:
 
-- List screen with a mix of pending and bought items
-- clear visual state change
+- List screen with the add item card
+- category pills and quick quantity entry
+- the floating add action visible
 
 Goal:
 
-- show everyday shopping flow
+- show how fast a household can add a needed item
 
 ### Screenshot 4
 
@@ -155,43 +156,42 @@ Goal:
 
 Filename:
 
-- `branding/app-store/iphone-05-budget-cycle.png`
+- `branding/app-store/iphone-05-household.png`
 
 Headline:
 
-- `Track spending by pay-day cycle`
+- `Manage the household in one place`
 
 Show:
 
 - Household screen
-- monthly budget
-- pay day
-- current cycle
-- spend mix or cycle insight
+- invite sharing
+- acting member controls
+- household settings
 
 Goal:
 
-- show the discipline layer that makes Home Basket stronger than a plain list app
+- show that Home Basket handles more than just the list
 
 ### Screenshot 6
 
 Filename:
 
-- `branding/app-store/iphone-06-reminders.png`
+- `branding/app-store/iphone-06-budget.png`
 
 Headline:
 
-- `Bring recurring staples back in one tap`
+- `Track the monthly budget when ready`
 
 Show:
 
-- reminders section
-- realistic household staples
-- add-now or recurring convenience action
+- monthly budget controls
+- pay-day cycle settings
+- current household currency
 
 Goal:
 
-- show long-term household usefulness
+- show optional spend tracking without making setup heavy
 
 ## Suggested export folders
 
